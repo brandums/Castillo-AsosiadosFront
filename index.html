@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Castillo y Asociados - Registro de Clientes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">Castillo <span>&</span> Asociados</div>
+            <div class="current-date" id="currentDate"></div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <h1 class="main-title">Registro de Clientes</h1>
+        
+        <div class="alert" id="alertBox"></div>
+        
+        <div class="card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>Lista de Clientes</h2>
+                <button class="btn btn-primary" id="addClientBtn">
+                    <i class="fas fa-plus"></i> Nuevo Cliente
+                </button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Cargando clientes...</p>
+            </div>
+            
+            <div class="table-container">
+                <table id="clientsTable">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Celular</th>
+                            <th>Urbanización</th>
+                            <th>Lote</th>
+                            <th>Asesor</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsTableBody">
+                        <!-- Los datos se cargarán aquí con JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar nuevo cliente -->
+    <div class="modal" id="clientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Registrar Nuevo Cliente</h3>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            
+            <form id="clientForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apellido">Apellido</label>
+                    <input type="text" id="apellido" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="celular">Número de Celular</label>
+                    <input type="tel" id="celular" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urbanizacion">Urbanización</label>
+                    <select id="urbanizacion" class="form-control" required>
+                        <option value="">Seleccione una urbanización</option>
+                        <!-- Las opciones se cargarán con JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lote">Número de Lote</label>
+                    <input type="text" id="lote" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="asesor">Asesor</label>
+                    <select id="asesor" class="form-control" required>
+                        <option value="">Seleccione un asesor</option>
+                        <!-- Las opciones se cargarán con JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="main.js"></script>
+</body>
+</html>
