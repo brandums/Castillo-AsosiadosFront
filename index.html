@@ -4,17 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Castillo y Asociados - Registro de Clientes</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <div class="container header-content">
-            <div class="logo">Castillo <span>&</span> Asociados</div>
+            <div class="logo-container">
+                <img src="CASTILLO.png" alt="Castillo & Asociados" class="logo-img">
+            </div>
             <div class="current-date" id="currentDate"></div>
         </div>
     </header>
+    
+    <!-- Sección de Logos de Urbanizaciones -->
+    <section class="urbanizaciones-section">
+        <div class="container">
+            <h2 class="section-title">Nuestros Proyectos</h2>
+            <div class="urbanizaciones-grid">
+                <div class="urbanizacion-card">
+                    <img src="Saucini.png" alt="Salucin Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="las_lomas.png" alt="Las Lomas Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="LOGO_VILLA_DEL_SUR.png" alt="Villa del Sur Urbanización" class="urbanizacion-logo">
+                </div>
+            </div>
+        </div>
+    </section>
     
     <div class="container">
         <h1 class="main-title">Registro de Clientes</h1>
@@ -42,6 +62,7 @@
                             <th>Celular</th>
                             <th>Urbanización</th>
                             <th>Lote</th>
+                            <th>Manzano</th>
                             <th>Asesor</th>
                             <th>Fecha</th>
                             <th>Estado</th>
@@ -90,6 +111,11 @@
                 <div class="form-group">
                     <label for="lote">Número de Lote</label>
                     <input type="text" id="lote" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="manzano">Manzano</label>
+                    <input type="text" id="manzano" class="form-control" required>
                 </div>
                 
                 <div class="form-group">

@@ -123,6 +123,7 @@ async function loadClientes() {
                 <td>${cliente.celular}</td>
                 <td>${urbanizacion}</td>
                 <td>${cliente.lote}</td>
+                <td style="text-align: center;">${cliente.manzano}</td>
                 <td>${asesor}</td>
                 <td>${fechaLocal.toLocaleDateString('es-ES', { timeZone: 'UTC' })}</td>
                 <td>
@@ -201,6 +202,7 @@ clientForm.addEventListener('submit', async (e) => {
     const celular = document.getElementById('celular').value;
     const urbanizacion = document.getElementById('urbanizacion').value;
     const lote = document.getElementById('lote').value;
+    const manzano = document.getElementById('manzano').value;
     const asesor = document.getElementById('asesor').value;
     
     try {
@@ -219,7 +221,8 @@ clientForm.addEventListener('submit', async (e) => {
             celular,
             proyectoId: urbanizacion,
             agenteId: asesor,
-            lote
+            lote,
+            manzano
         };
         
         // Registrar cliente
