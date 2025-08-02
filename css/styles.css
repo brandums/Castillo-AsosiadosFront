@@ -1054,3 +1054,19 @@ tr:hover {
         padding: 20px;
     }
 }
+
+
+.urbanizacion-logo[src*="Saucini"],
+.urbanizacion-logo[src*="las_lomas"],
+.urbanizacion-logo[src*="VILLA_DEL_SUR"] {
+    max-height: 80px; /* Ajusta este valor según necesites */
+    width: auto;
+}
+
+@media (min-width: 769px) {
+    .urbanizacion-logo[src*="Saucini"],
+    .urbanizacion-logo[src*="las_lomas"],
+    .urbanizacion-logo[src*="VILLA_DEL_SUR"] {
+        max-height: 120px;
+    }
+}
