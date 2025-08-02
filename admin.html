@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administrador - Castillo y Asociados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo-container">
+                <img src="images/CASTILLO.png" alt="Castillo & Asociados" class="logo-img">
+            </div>
+            <div class="user-info">
+                <span id="userName"></span>
+                <button id="logoutBtn" class="btn btn-link" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Sección de Logos de Urbanizaciones -->
+    <section class="urbanizaciones-section">
+        <div class="container">
+            <h2 class="section-title">Nuestros Proyectos</h2>
+            <div class="urbanizaciones-grid">
+                <div class="urbanizacion-card">
+                    <img src="images/Saucini.png" alt="Salucin Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="images/las_lomas.png" alt="Las Lomas Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="images/LOGO_VILLA_DEL_SUR.png" alt="Villa del Sur Urbanización" class="urbanizacion-logo">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="container">
+        <h1 class="main-title">Panel de Administrador</h1>
+        
+        <div class="alert" id="alertBox"></div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="clientes">Clientes</button>
+            <button class="tab-btn" data-tab="prorrogas">Solicitudes de Prórroga</button>
+            <button style="display: none;" class="tab-btn" data-tab="usuarios">Usuarios</button>
+        </div>
+        
+        <!-- Tabla de Clientes -->
+        <div class="tab-content active" id="clientesTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Todos los Clientes</h2>
+                </div>
+                <div class="table-container">
+                    <table id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Celular</th>
+                                <th>Urbanización</th>
+                                <th>Lote</th>
+                                <th>Manzano</th>
+                                <th>Asesor</th>
+                                <th>Creación</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabla de Prórrogas -->
+        <div class="tab-content" id="prorrogasTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Solicitudes de Prórroga</h2>
+                </div>
+                <div class="table-container">
+                    <table id="prorrogasTable">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Asesor</th>
+                                <th>Descripción</th>
+                                <th>Imagen</th>
+                                <th>Creación</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prorrogasTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabla de Usuarios -->
+        <div class="tab-content" id="usuariosTab">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Usuarios del Sistema</h2>
+                    <button class="btn btn-primary" id="addUserBtn">
+                        <i class="fas fa-plus"></i> Nuevo Usuario
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Celular</th>
+                                <th>Fecha Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para aprobar/rechazar prórroga -->
+    <div class="modal" id="prorrogaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="prorrogaModalTitle">Revisar Solicitud de Prórroga</h3>
+                <button class="close-btn" id="closeProrrogaModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="prorrogaDetails"></div>
+                <div class="form-group">
+                    <label>Decisión:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="decision" value="aprobado" checked> Aprobar
+                        </label>
+                        <label>
+                            <input type="radio" name="decision" value="rechazado"> Rechazar
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group" id="diasExtraGroup">
+                    <label for="diasExtra">Días extra a conceder:</label>
+                    <input type="number" id="diasExtra" class="form-control" min="1" value="7">
+                </div>
+                <div class="form-group">
+                    <label for="comentario">Comentario (opcional):</label>
+                    <textarea id="comentario" class="form-control" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="cancelProrrogaBtn">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmProrrogaBtn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar/editar usuario -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">Nuevo Usuario</h3>
+                <button class="close-btn" id="closeUserModalBtn">&times;</button>
+            </div>
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                <div class="form-group">
+                    <label for="userNombre">Nombre</label>
+                    <input type="text" id="userNombre" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="userApellido">Apellido</label>
+                    <input type="text" id="userApellido" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="userCelular">Celular</label>
+                    <input type="tel" id="userCelular" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="userRol">Rol</label>
+                    <select id="userRol" class="form-control" required>
+                        <option value="">Seleccione un rol</option>
+                        <option value="administrador">Administrador</option>
+                        <option value="agente">Agente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="userPassword">Contraseña</label>
+                    <input type="password" id="userPassword" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelUserBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-logo">
+                    <img src="images/CASTILLO.png" alt="Castillo & Asociados" class="footer-logo-img">
+                </div>
+                <div class="footer-contact">
+                    <h3>Contacto</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> Dirección: C. Antezana Torre Milenium, Cochabamba</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Inicio</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Proyectos</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Brandum'Soft. Todos los derechos reservados.</p>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/share/1Ay2Kd7Bd3/?mibextid=wwXIfr"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.tiktok.com/@cadesarollos?_t=ZM-8yY8Kl42aoy&_r=1"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.instagram.com/villadelsururbanizacion?igsh=MXFtaDBnOXN1dm5idQ%3D%3D&utm_source=qr"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="js/common.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Agente - Castillo y Asociados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/agent.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo-container">
+                <img src="images/CASTILLO.png" alt="Castillo & Asociados" class="logo-img">
+            </div>
+            <div class="user-info">
+                <span id="userName"></span>
+                <button id="logoutBtn" class="btn btn-link" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Sección de Logos de Urbanizaciones -->
+    <section class="urbanizaciones-section">
+        <div class="container">
+            <h2 class="section-title">Nuestros Proyectos</h2>
+            <div class="urbanizaciones-grid">
+                <div class="urbanizacion-card">
+                    <img src="images/Saucini.png" alt="Salucin Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="images/las_lomas.png" alt="Las Lomas Urbanización" class="urbanizacion-logo">
+                </div>
+                <div class="urbanizacion-card">
+                    <img src="images/LOGO_VILLA_DEL_SUR.png" alt="Villa del Sur Urbanización" class="urbanizacion-logo">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="container">
+        <h1 class="main-title">Panel de Agente</h1>
+        
+        <div class="alert" id="alertBox"></div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="clientes">Mis Clientes</button>
+            <button class="tab-btn" data-tab="prorrogas">Mis Prórrogas</button>
+        </div>
+        
+        <!-- Tabla de Clientes -->
+        <div class="tab-content active" id="clientesTab">
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Mis Clientes</h2>
+                    <button class="btn btn-primary" id="addClientBtn">
+                        <i class="fas fa-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="clientsTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Celular</th>
+                                <th>Urbanización</th>
+                                <th>Lote</th>
+                                <th>Manzano</th>
+                                <th>Creación</th>
+                                <th>Días Restantes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tabla de Prórrogas -->
+        <div class="tab-content" id="prorrogasTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Mis Solicitudes de Prórroga</h2>
+                </div>
+                <div class="table-container">
+                    <table id="prorrogasTable">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Descripción</th>
+                                <th>Imagen</th>
+                                <th>Creación</th>
+                                <th>Estado</th>
+                                <th>Fecha Resolución</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prorrogasTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para nuevo cliente -->
+    <div class="modal" id="clientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Registrar Nuevo Cliente</h3>
+                <button class="close-btn" id="closeClientModalBtn">&times;</button>
+            </div>
+            <form id="clientForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="apellido">Apellido</label>
+                    <input type="text" id="apellido" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="celular">Celular</label>
+                    <input type="tel" id="celular" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="urbanizacion">Urbanización</label>
+                    <select id="urbanizacion" class="form-control" required></select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="lote">Lote</label>
+                    <input type="text" id="lote" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="manzano">Manzano</label>
+                    <input type="text" id="manzano" class="form-control" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelClientBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para solicitar prórroga -->
+    <div class="modal" id="prorrogaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Solicitar Prórroga</h3>
+                <button class="close-btn" id="closeProrrogaModalBtn">&times;</button>
+            </div>
+            <form id="prorrogaForm">
+                <input type="hidden" id="prorrogaClienteId">
+                <input type="hidden" id="prorrogaFechaLimite">
+                
+                <div class="form-group">
+                    <label for="prorrogaDescripcion">Descripción</label>
+                    <textarea id="prorrogaDescripcion" class="form-control" rows="3" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="prorrogaImagen">URL de Imagen (opcional)</label>
+                    <input type="url" id="prorrogaImagen" class="form-control">
+                    <small class="form-text">Puede subir la imagen a un servicio como ImgBB y pegar el enlace aquí</small>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelProrrogaBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-logo">
+                    <img src="images/CASTILLO.png" alt="Castillo & Asociados" class="footer-logo-img">
+                </div>
+                <div class="footer-contact">
+                    <h3>Contacto</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> Dirección: C. Antezana Torre Milenium, Cochabamba</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Enlaces Rápidos</h3>
+                    <ul>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Inicio</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Proyectos</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Contacto</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Brandum'Soft. Todos los derechos reservados.</p>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com/share/1Ay2Kd7Bd3/?mibextid=wwXIfr"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://www.tiktok.com/@cadesarollos?_t=ZM-8yY8Kl42aoy&_r=1"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.instagram.com/villadelsururbanizacion?igsh=MXFtaDBnOXN1dm5idQ%3D%3D&utm_source=qr"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="js/common.js"></script>
+    <script src="js/agent.js"></script>
+</body>
+</html>
