@@ -788,6 +788,7 @@ tr:hover {
     
     
     .urbanizacion-card {
+        max-height: 100px;
         height: 100px;
         padding: 15px;
     }
