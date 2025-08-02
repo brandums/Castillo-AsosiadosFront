@@ -999,3 +999,58 @@ tr:hover {
         font-size: 0.8rem;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Añade esto a tu archivo CSS */
+.urbanizaciones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 0 15px;
+}
+
+.urbanizacion-card {
+    background: var(--light);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 120px; /* Altura fija para móviles */
+    overflow: hidden;
+}
+
+.urbanizacion-logo {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    transition: all 0.3s ease;
+}
+
+/* Para desktop */
+@media (min-width: 769px) {
+    .urbanizaciones-grid {
+        gap: 30px;
+        padding: 0 20px;
+    }
+    
+    .urbanizacion-card {
+        height: 150px;
+        padding: 20px;
+    }
+}
