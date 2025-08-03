@@ -32,7 +32,7 @@
 }
 
 .login-card .logo-container {
-    height: 320px;
+    height: 140px;
     margin-bottom: 30px;
 }
 
@@ -59,7 +59,6 @@
     }
     
     .login-card .logo-container {
-        height: 320px;
         margin-bottom: 20px;
     }
 }
