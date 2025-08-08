@@ -941,8 +941,9 @@ tr:hover {
     }
     
     /* Ajuste de columnas específicas */
-    td:nth-child(1), th:nth-child(1) { /* Nombre */
-        max-width: 100px;
+    td:nth-child(1), th:nth-child(1),
+    td:nth-child(6), th:nth-child(6) { /* Nombre y fecha */ 
+        max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -1070,3 +1071,18 @@ tr:hover {
         max-height: 120px;
     }
 } 
+
+
+
+#clientsTable td,
+#clientsTable th {
+    height: 50px; /* ajusta a tu gusto */
+    padding: 8px; /* igual en todas las columnas */
+    vertical-align: middle; /* centra el contenido verticalmente */
+    
+}
+
+#clientsTable td button {
+    line-height: 1; /* para que los botones no inflen la celda */
+    padding: 4px 8px; /* ajusta el tamaño del botón */
+}
