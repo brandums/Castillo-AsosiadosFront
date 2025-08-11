@@ -807,7 +807,7 @@ tr:hover {
     .container { padding: 12px; }
 
     .card { padding: var(--card-padding-sm); margin-bottom: 20px; }
-    .card-header h2 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
+    .card-header h2 { font-size: 1.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
 
     th, td { padding: 8px 10px; font-size: 0.85rem; }
     table { width: 100%; font-size: 0.9rem; table-layout: auto !important; min-width: unset !important; }
@@ -854,7 +854,7 @@ tr:hover {
     #addClientBtn { padding: 6px 8px; font-size: 0.8rem; }
     .btn { font-size: 0.85rem; padding: .32rem .6rem; }
     .btn-compact { padding: .12rem .35rem; font-size:.72rem; }
-    .card-header h2 { max-width: 55%; font-size: .95rem; }
+    .card-header h2 { max-width: 55%; font-size: 1.4rem; }
     .image-icon-link { font-size: .95rem; }
     .footer-links a { font-size: .85rem; }
 }
