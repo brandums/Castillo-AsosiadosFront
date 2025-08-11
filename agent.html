@@ -50,6 +50,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="clientes">Mis Clientes</button>
             <button class="tab-btn" data-tab="prorrogas">Mis Prórrogas</button>
+            <button class="tab-btn" data-tab="reservas">Mis Reservas</button>
         </div>
         
         <!-- Tabla de Clientes -->
@@ -103,6 +104,103 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- Tabla de Reservas -->
+        <div class="tab-content" id="reservasTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Reservas de Terrenos</h2>
+                    <button class="btn btn-primary" id="addReservaBtn">
+                        <i class="fas fa-plus"></i> Nueva Reserva
+                    </button>
+                </div>
+                <div class="filtro-proyectos" style="margin-bottom: 15px;">
+                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                        <select id="filtroReservas" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                <div class="table-container">
+                    <table id="reservasTable">
+                        <thead>
+                            <tr>
+                                <th>Proyecto</th>
+                                <th>Manzano</th>
+                                <th>Terreno</th>
+                                <th>Cliente</th>
+                                <th>Monto</th>
+                                <th>Fecha Reserva</th>
+                                <th>Días Restantes</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservasTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar reserva -->
+    <div class="modal" id="reservaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reservaModalTitle">Nueva Reserva</h3>
+                <button class="close-btn" id="closeReservaModalBtn">&times;</button>
+            </div>
+            <form id="reservaForm">
+                <input type="hidden" id="reservaId">
+                <div class="form-group">
+                    <label for="reservaProyecto">Proyecto</label>
+                    <select id="reservaProyecto" class="form-control" required>
+                        <option value="">Seleccionar proyecto</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaManzano">Manzano</label>
+                    <input type="text" id="reservaManzano" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reservaTerreno">Número de Terreno</label>
+                    <input type="text" id="reservaTerreno" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reservaCliente">Cliente</label>
+                    <select id="reservaCliente" class="form-control" required>
+                        <option value="">Seleccionar cliente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaMonto">Monto de Reserva</label>
+                    <select id="reservaMonto" class="form-control" required>
+                        <option value="">Seleccionar monto</option>
+                        <option value="100">100 Bs (7 días)</option>
+                        <option value="1000">1000 Bs (20 días)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaMetodoPago">Método de Pago</label>
+                    <select id="reservaMetodoPago" class="form-control" required>
+                        <option value="">Seleccionar método</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Depósito">Depósito</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaObservacion">Observación</label>
+                    <textarea id="reservaObservacion" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reservaFormulario">Número de Formulario</label>
+                    <input type="text" id="reservaFormulario" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelReservaBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
     

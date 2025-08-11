@@ -2,6 +2,8 @@ let user = JSON.parse(sessionStorage.getItem('user'));
 let urbanizacionesCache = [];
 let clientesCache = [];
 let prorrogasCache = [];
+let proyectosCache = [];
+let reservasCache = [];
 
 const $ = (id) => document.getElementById(id);
 const qs = (sel) => document.querySelector(sel);
@@ -76,11 +78,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (userNameEl) userNameEl.textContent = `${user.nombre} ${user.apellido}`;
 
         await Promise.all([
-            loadUrbanizaciones(),
-            loadClientes(),
-            loadProrrogas()
+            await loadUrbanizaciones(),
+            await loadClientes(),
+            await loadProrrogas(),
+            await loadProyectos(),
+            await loadReservas(),
         ]);
 
+        initFiltroReservas();
         setupEventListeners();
     } catch (err) {
         console.error('Error en DOMContentLoaded:', err);
@@ -132,6 +137,106 @@ async function loadClientes() {
         showAlert('Error al cargar los clientes', 'error');
         clientesCache = [];
         return [];
+    }
+}
+
+async function loadProyectos() {
+    try {
+        const data = await fetchJson(`${API_URL}/proyectos`, { headers: getAuthHeaders() }, 'Error al cargar urbanizaciones');
+        proyectosCache = Array.isArray(data) ? data : [];
+        return proyectosCache;
+    } catch (error) {
+        console.error('Error al cargar urbanizacion:', error);
+        showAlert('Error al cargar los urbanizacion', 'error');
+        proyectosCache = [];
+        return [];
+    }
+}
+
+async function loadReservas() {
+    const tbody = document.getElementById('reservasTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando reservas...</td></tr>';
+    
+    try {
+        let reservas = [];
+        if(reservasCache.length === 0){
+            const headers = {
+                'Content-Type': 'application/json',
+                'email': user.email,
+                'password': user.password
+            };
+
+            const reservasResponse = await fetch(`${API_URL}/reservas`, { headers });
+            
+            if (!reservasResponse.ok) {
+                if (reservasResponse.status === 404) {
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay reservas registradas</td></tr>';
+                    return;
+                }
+                
+                const errorData = await reservasResponse.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${reservasResponse.status} al cargar reservas`);
+            }
+            
+            reservas = await reservasResponse.json();
+            reservasCache = reservas;
+        }
+        else{
+            reservas = reservasCache;
+        }
+
+        if (tbody) tbody.innerHTML = '';
+        
+        if (!reservas || reservas.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay reservas registradas</td></tr>';
+            return;
+        }
+        
+        const clientes = clientesCache;
+        const proyectos = proyectosCache;
+
+        // 🔹 Obtener valor del filtro de proyecto
+        const filtroProyecto = document.getElementById('filtroReservas')?.value || 'todos';
+        if (filtroProyecto !== 'todos') {
+            reservas = reservas.filter(r => String(r.proyectoId) === String(filtroProyecto));
+        }
+        
+        reservas.forEach(reserva => {
+            const proyecto = proyectos.find(p => p.id === reserva.proyectoId)?.nombre || 'N/A';
+            const cliente = clientes.find(c => c.id === reserva.clienteId);
+            const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : 'N/A';
+            
+            const fechaReserva = new Date(reserva.fechaReserva);
+            const fechaVencimiento = new Date(fechaReserva);
+            fechaVencimiento.setDate(fechaReserva.getDate() + parseInt(reserva.tiempoEspera));
+            const hoy = new Date();
+            const diasRestantes = Math.ceil((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${proyecto}</td>
+                <td>${reserva.manzano}</td>
+                <td>${reserva.nroTerreno}</td>
+                <td>${nombreCliente}</td>
+                <td>${reserva.montoReserva} Bs</td>
+                <td>${formatDate(reserva.fechaReserva)}</td>
+                <td>
+                    <span class="badge ${diasRestantes > 3 ? 'badge-success' : 'badge-warning'}">
+                        ${diasRestantes > 0 ? diasRestantes : 'Vencido'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${reserva.firmado == "TRUE" ? 'badge-success' : 'badge-info'}">
+                        ${reserva.firmado == "TRUE" ? 'Firmado' : 'Pendiente'}
+                    </span>
+                </td>
+            `;
+            if (tbody) tbody.appendChild(row);
+        });        
+    } catch (error) {
+        console.error('Error al cargar reservas:', error);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
+        showAlert(`Error al cargar reservas: ${error.message}`, 'error');
     }
 }
 
@@ -515,6 +620,85 @@ function setupEventListeners() {
         });
     }
 
+
+
+    const addReservaBtn = document.getElementById('addReservaBtn');
+    if (addReservaBtn) {
+        addReservaBtn.addEventListener('click', () => openReservaModal(null));
+    }
+
+    const reservaModal = document.getElementById('reservaModal');
+    const closeReservaModalBtn = document.getElementById('closeReservaModalBtn');
+    const cancelReservaBtn = document.getElementById('cancelReservaBtn');
+    const reservaForm = document.getElementById('reservaForm');
+    
+    if (closeReservaModalBtn) {
+        closeReservaModalBtn.addEventListener('click', () => {
+            if (reservaModal) reservaModal.style.display = 'none';
+        });
+    }
+    
+    if (cancelReservaBtn) {
+        cancelReservaBtn.addEventListener('click', () => {
+            if (reservaModal) reservaModal.style.display = 'none';
+        });
+    }
+    
+    if (reservaForm) {
+        reservaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const reservaId = document.getElementById('reservaId').value;
+            const proyectoId = document.getElementById('reservaProyecto').value;
+            const manzano = document.getElementById('reservaManzano').value;
+            const nroTerreno = document.getElementById('reservaTerreno').value;
+            const clienteId = document.getElementById('reservaCliente').value;
+            const montoReserva = document.getElementById('reservaMonto').value;
+            const metodoPago = document.getElementById('reservaMetodoPago').value;
+            const observacion = document.getElementById('reservaObservacion').value;
+            const formularioNro = document.getElementById('reservaFormulario').value;
+            
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'email': user.email,
+                    'password': user.password
+                };
+
+                const method = reservaId ? 'PUT' : 'POST';
+                const url = reservaId ? `${API_URL}/reservas/${reservaId}` : `${API_URL}/reservas`;
+                
+                const response = await fetch(url, {
+                    method,
+                    headers,
+                    body: JSON.stringify({
+                        manzano,
+                        nroTerreno,
+                        montoReserva,
+                        metodoPago,
+                        clienteId,
+                        observacion,
+                        formularioNro,
+                        proyectoId
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al guardar reserva');
+                }
+                
+                const result = await response.json();
+                showAlert(result.message);
+                if (reservaModal) reservaModal.style.display = 'none';
+                await loadReservas();
+            } catch (error) {
+                console.error('Error al guardar reserva:', error);
+                showAlert(error.message, 'error');
+            }
+        });
+    }
+
     window.addEventListener('click', (e) => {
         if (e.target === $('clientModal')) {
             if ($('clientModal')) $('clientModal').style.display = 'none';
@@ -525,7 +709,80 @@ function setupEventListeners() {
         if (e.target === $('editClientModal')) {
             if ($('editClientModal')) $('editClientModal').style.display = 'none';
         }
+        if (e.target === reservaModal) {
+            if (reservaModal) reservaModal.style.display = 'none';
+        }
     });
+}
+
+async function openReservaModal(reservaId) {
+    const reservaModal = document.getElementById('reservaModal');
+    const reservaModalTitle = document.getElementById('reservaModalTitle');
+    const reservaIdInput = document.getElementById('reservaId');
+    const reservaForm = document.getElementById('reservaForm');
+    
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'email': user.email,
+            'password': user.password
+        };
+
+        const proyectos = proyectosCache;        
+        const clientes = clientesCache;
+        
+        const proyectoSelect = document.getElementById('reservaProyecto');
+        if (proyectoSelect) {
+            proyectoSelect.innerHTML = '<option value="">Seleccionar proyecto</option>';
+            proyectos.forEach(proyecto => {
+                const option = document.createElement('option');
+                option.value = proyecto.id;
+                option.textContent = proyecto.nombre;
+                proyectoSelect.appendChild(option);
+            });
+        }
+        
+        const clienteSelect = document.getElementById('reservaCliente');
+        if (clienteSelect) {
+            clienteSelect.innerHTML = '<option value="">Seleccionar cliente</option>';
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = `${cliente.nombre} ${cliente.apellido}`;
+                clienteSelect.appendChild(option);
+            });
+        }
+        
+        if (reservaId) {
+            reservaModalTitle.textContent = 'Editar Reserva';
+            
+            const reservaResponse = await fetch(`${API_URL}/reservas/${reservaId}`, { headers });
+            if (!reservaResponse.ok) throw new Error('Error al cargar reserva');
+            const reserva = await reservaResponse.json();
+            
+            if (reserva) {
+                document.getElementById('reservaProyecto').value = reserva.proyectoId;
+                document.getElementById('reservaManzano').value = reserva.manzano;
+                document.getElementById('reservaTerreno').value = reserva.nroTerreno;
+                document.getElementById('reservaCliente').value = reserva.clienteId;
+                document.getElementById('reservaMonto').value = reserva.montoReserva;
+                document.getElementById('reservaMetodoPago').value = reserva.metodoPago;
+                document.getElementById('reservaObservacion').value = reserva.observacion || '';
+                document.getElementById('reservaFormulario').value = reserva.formularioNro || '';
+                
+                reservaIdInput.value = reserva.id;
+            }
+        } else {
+            reservaModalTitle.textContent = 'Nueva Reserva';
+            reservaForm.reset();
+            reservaIdInput.value = '';
+        }
+        
+        if (reservaModal) reservaModal.style.display = 'flex';
+    } catch (error) {
+        console.error('Error al abrir modal de reserva:', error);
+        showAlert(error.message, 'error');
+    }
 }
 
 function openProrrogaModal(clienteId, fechaLimite) {
@@ -540,4 +797,27 @@ function openProrrogaModal(clienteId, fechaLimite) {
     if (descEl) descEl.value = '';
     if (imgEl) imgEl.value = '';
     if (prorrogaModal) prorrogaModal.style.display = 'flex';
+}
+
+
+function initFiltroReservas() {
+    const select = document.getElementById('filtroReservas');
+    if (!select) return;
+
+    // Limpiar y agregar "Todos"
+    select.innerHTML = '<option value="todos">Todos</option>';
+
+    // Agregar cada proyecto
+    proyectosCache.forEach(proyecto => {
+        const opt = document.createElement('option');
+        opt.value = proyecto.id;
+        opt.textContent = proyecto.nombre;
+        select.appendChild(opt);
+    });
+
+    // Evento cambio -> recargar tablas
+    select.addEventListener('change', () => {
+        loadReservas();
+        
+    });
 }

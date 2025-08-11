@@ -50,9 +50,15 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="clientes">Clientes</button>
             <button class="tab-btn" data-tab="prorrogas">Solicitudes de Prórroga</button>
+            <button class="tab-btn" data-tab="equipos">Equipos</button>
+            <button class="tab-btn" data-tab="reservas">Reservas</button>
+            <button class="tab-btn" data-tab="contratos">Contratos</button>
+            <button class="tab-btn" data-tab="clientesFijos">Clientes Fijos</button>
             <button style="display: none;" class="tab-btn" data-tab="usuarios">Usuarios</button>
+            <button class="tab-btn" data-tab="ranking">Ranking</button>
         </div>
-        
+
+
         <!-- Tabla de Clientes -->
         <div class="tab-content active" id="clientesTab">
             <div class="card">
@@ -103,16 +109,140 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Tabla de Equipos -->
+        <div class="tab-content" id="equiposTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Equipos de Trabajo</h2>
+                    <button class="btn btn-primary" id="addTeamBtn">
+                        <i class="fas fa-plus"></i> Nuevo Equipo
+                    </button>
+                </div>
+                <div class="table-container">
+                    <table id="teamsTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Miembros</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Reservas -->
+        <div class="tab-content" id="reservasTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Reservas de Terrenos</h2>
+                    <!-- <button class="btn btn-primary" id="addReservaBtn">
+                        <i class="fas fa-plus"></i> Nueva Reserva
+                    </button> -->
+                </div>
+                <div class="filtro-proyectos" style="margin-bottom: 15px;">
+                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                        <select id="filtroReservas" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                <div class="table-container">
+                    <table id="reservasTable">
+                        <thead>
+                            <tr>
+                                <th>Proyecto</th>
+                                <th>Manzano</th>
+                                <th>Terreno</th>
+                                <th>Cliente</th>
+                                <th>Monto</th>
+                                <th>Fecha Reserva</th>
+                                <th>Días Restantes</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservasTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Contratos -->
+        <div class="tab-content" id="contratosTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Contratos</h2>
+                </div>
+                <div class="filtro-proyectos" style="margin-bottom: 15px;">
+                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                        <select id="filtroContratos" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                <div class="table-container">
+                    <table id="contratosTable">
+                        <thead>
+                            <tr>
+                                <th>Manzano</th>
+                                <th>Terreno</th>
+                                <th>Fecha Reserva</th>
+                                <th>Asesor</th>
+                                <th>Cliente</th>
+                                <th>Equipo</th>
+                                <th>Metodo Pago</th>
+                                <th>Monto</th>
+                                <th>Proyecto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contratosTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de ClientesFijos -->
+        <div class="tab-content" id="clientesFijosTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Clientes fijos</h2>
+                </div>
+                <div class="filtro-proyectos" style="margin-bottom: 15px;">
+                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                        <select id="filtroClientesF" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                <div class="table-container">
+                    <table id="clientesFijosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Telefono</th>
+                                <th>Proyecto</th>
+                                <th>Lote</th>
+                                <th>Manzano</th>
+                                <th>Firma de Contrato</th>
+                                <th>Fecha de Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesFijosTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabla de Usuarios -->
         <div class="tab-content" id="usuariosTab">
             <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-header">
                     <h2>Usuarios del Sistema</h2>
                     <button class="btn btn-primary" id="addUserBtn">
                         <i class="fas fa-plus"></i> Nuevo Usuario
                     </button>
-                </div>
+                </div>                
                 <div class="table-container">
                     <table id="usersTable">
                         <thead>
@@ -129,6 +259,152 @@
                     </table>
                 </div>
             </div>
+        </div>
+
+        <!-- Tabla de Ranking -->
+    <div class="tab-content" id="rankingTab">
+        <div class="card">
+            <div class="card-header">
+                <h2>Ranking de Contratos</h2>
+                <!-- <button class="btn btn-primary" id="refreshRankingBtn">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button> -->
+            </div>
+            <div class="filtro-proyectos" style="margin-bottom: 15px;">
+                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                        <select id="filtroRanking" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+            <div class="ranking-container">
+                <div class="ranking-section">
+                    <h3><i class="fas fa-user-tie"></i> Por Asesor</h3>
+                    <div class="table-container">
+                        <table id="rankingAsesorTable">
+                            <thead>
+                                <tr>
+                                    <th>Posición</th>
+                                    <th>Asesor</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto Total</th>
+                                    <th>Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankingAsesorTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="ranking-section">
+                    <h3><i class="fas fa-users"></i> Por Equipo</h3>
+                    <div class="table-container">
+                        <table id="rankingEquipoTable">
+                            <thead>
+                                <tr>
+                                    <th>Posición</th>
+                                    <th>Equipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Monto Total</th>
+                                    <th>Promedio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rankingEquipoTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- Modal para agregar/editar equipo -->
+    <div class="modal" id="teamModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="teamModalTitle">Nuevo Equipo</h3>
+                <button class="close-btn" id="closeTeamModalBtn">&times;</button>
+            </div>
+            <form id="teamForm">
+                <input type="hidden" id="teamId">
+                <div class="form-group">
+                    <label for="teamNombre">Nombre del Equipo</label>
+                    <input type="text" id="teamNombre" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="teamMiembros">Seleccionar Miembros</label>
+                    <select id="teamMiembros" class="form-control" multiple style="height: 150px;">
+                        <!-- Los usuarios se cargarán dinámicamente -->
+                    </select>
+                    <small class="form-text text-muted">Mantén presionada la tecla Ctrl (Windows) o Comando (Mac) para seleccionar múltiples miembros.</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelTeamBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar reserva -->
+    <div class="modal" id="reservaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reservaModalTitle">Nueva Reserva</h3>
+                <button class="close-btn" id="closeReservaModalBtn">&times;</button>
+            </div>
+            <form id="reservaForm">
+                <input type="hidden" id="reservaId">
+                <div class="form-group">
+                    <label for="reservaProyecto">Proyecto</label>
+                    <select id="reservaProyecto" class="form-control" required>
+                        <option value="">Seleccionar proyecto</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaManzano">Manzano</label>
+                    <input type="text" id="reservaManzano" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reservaTerreno">Número de Terreno</label>
+                    <input type="text" id="reservaTerreno" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="reservaCliente">Cliente</label>
+                    <select id="reservaCliente" class="form-control" required>
+                        <option value="">Seleccionar cliente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaMonto">Monto de Reserva</label>
+                    <select id="reservaMonto" class="form-control" required>
+                        <option value="">Seleccionar monto</option>
+                        <option value="100">100 Bs (7 días)</option>
+                        <option value="1000">1000 Bs (20 días)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaMetodoPago">Método de Pago</label>
+                    <select id="reservaMetodoPago" class="form-control" required>
+                        <option value="">Seleccionar método</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Depósito">Depósito</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reservaObservacion">Observación</label>
+                    <textarea id="reservaObservacion" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="reservaFormulario">Número de Formulario</label>
+                    <input type="text" id="reservaFormulario" class="form-control">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelReservaBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -168,6 +444,37 @@
         </div>
     </div>
     
+    <!-- Modal para firmar reserva -->
+    <div class="modal" id="firmarReservaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Firmar Reserva</h3>
+                <button class="close-btn" id="closeFirmarReservaModalBtn">&times;</button>
+            </div>
+            <form id="firmarReservaForm">
+                <input type="hidden" id="firmarReservaId">
+                <div class="form-group">
+                    <label for="firmarMetodoPago">Método de Pago</label>
+                    <select id="firmarMetodoPago" class="form-control" required>
+                        <option value="">Seleccionar método</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Depósito">Depósito</option>
+                        <option value="QR">QR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="firmarMonto">Monto</label>
+                    <input type="number" id="firmarMonto" class="form-control" required min="0" step="0.01">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelFirmarReservaBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Firma</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal para agregar/editar usuario -->
     <div class="modal" id="userModal">
         <div class="modal-content">
