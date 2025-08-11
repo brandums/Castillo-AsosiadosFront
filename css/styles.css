@@ -978,3 +978,31 @@ tr:hover {
     font-size: 0.9rem;
   }
 }
+
+
+
+.form-row {
+        display: flex;
+        gap: 15px; /* Espacio entre elementos */
+        margin-bottom: 15px;
+    }
+    
+    .form-group-inline {
+        flex: 1; /* Hace que ambos elementos ocupen el mismo espacio */
+        min-width: 0; /* Evita problemas de desbordamiento */
+    }
+
+    /* Estilos base para los controles del formulario */
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+    
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }

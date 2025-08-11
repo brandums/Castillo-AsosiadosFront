@@ -142,7 +142,6 @@
         </div>
     </div>
 
-    <!-- Modal para agregar/editar reserva -->
     <div class="modal" id="reservaModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -157,37 +156,47 @@
                         <option value="">Seleccionar proyecto</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="reservaManzano">Manzano</label>
-                    <input type="text" id="reservaManzano" class="form-control" required>
+                
+                <!-- Fila para Manzano y Terreno -->
+                <div class="form-row">
+                    <div class="form-group form-group-inline">
+                        <label for="reservaManzano">Manzano</label>
+                        <input type="text" id="reservaManzano" class="form-control" required>
+                    </div>
+                    <div class="form-group form-group-inline">
+                        <label for="reservaTerreno">Número de Terreno</label>
+                        <input type="text" id="reservaTerreno" class="form-control" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="reservaTerreno">Número de Terreno</label>
-                    <input type="text" id="reservaTerreno" class="form-control" required>
-                </div>
+                
                 <div class="form-group">
                     <label for="reservaCliente">Cliente</label>
                     <select id="reservaCliente" class="form-control" required>
                         <option value="">Seleccionar cliente</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="reservaMonto">Monto de Reserva</label>
-                    <select id="reservaMonto" class="form-control" required>
-                        <option value="">Seleccionar monto</option>
-                        <option value="100">100 Bs (7 días)</option>
-                        <option value="1000">1000 Bs (20 días)</option>
-                    </select>
+                
+                <!-- Fila para Monto y Método de pago -->
+                <div class="form-row">
+                    <div class="form-group form-group-inline">
+                        <label for="reservaMonto">Monto de Reserva</label>
+                        <select id="reservaMonto" class="form-control" required>
+                            <option value="">Seleccionar monto</option>
+                            <option value="100">100 Bs (7 días)</option>
+                            <option value="1000">1000 Bs (20 días)</option>
+                        </select>
+                    </div>
+                    <div class="form-group form-group-inline">
+                        <label for="reservaMetodoPago">Método de Pago</label>
+                        <select id="reservaMetodoPago" class="form-control" required>
+                            <option value="">Seleccionar método</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Depósito">Depósito</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="reservaMetodoPago">Método de Pago</label>
-                    <select id="reservaMetodoPago" class="form-control" required>
-                        <option value="">Seleccionar método</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Depósito">Depósito</option>
-                    </select>
-                </div>
+                
                 <div class="form-group">
                     <label for="reservaObservacion">Observación</label>
                     <textarea id="reservaObservacion" class="form-control" rows="3"></textarea>
