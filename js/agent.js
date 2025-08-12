@@ -739,6 +739,7 @@ async function openReservaModal(reservaId) {
                 option.value = proyecto.id;
                 option.textContent = proyecto.nombre;
                 proyectoSelect.appendChild(option);
+                proyectoSelect.addEventListener('change', actualizarMontosReserva);
             });
         }
         
@@ -752,15 +753,41 @@ async function openReservaModal(reservaId) {
                 clienteSelect.appendChild(option);
             });
         }
+
+        const closeReservaModalBtn = document.getElementById('closeReservaModalBtn');
+        if (closeReservaModalBtn) {
+            closeReservaModalBtn.addEventListener('click', () => {
+                if (proyectoSelect) {
+                    proyectoSelect.removeEventListener('change', actualizarMontosReserva);
+                }
+            });
+        }
+
+        const cancelReservaBtn = document.getElementById('cancelReservaBtn');
+        if (cancelReservaBtn) {
+            cancelReservaBtn.addEventListener('click', () => {
+                if (proyectoSelect) {
+                    proyectoSelect.removeEventListener('change', actualizarMontosReserva);
+                }
+            });
+        }
         
         if (reservaId) {
             reservaModalTitle.textContent = 'Editar Reserva';
+            reservaModal.dataset.editing = 'true';
             
             const reservaResponse = await fetch(`${API_URL}/reservas/${reservaId}`, { headers });
             if (!reservaResponse.ok) throw new Error('Error al cargar reserva');
             const reserva = await reservaResponse.json();
             
             if (reserva) {
+                document.getElementById('reservaProyecto').value = reserva.proyectoId;
+                // Guardar el monto actual para usarlo después de actualizar las opciones
+                reservaModal.dataset.currentMonto = reserva.montoReserva;
+                
+                // Actualizar montos basado en el proyecto seleccionado
+                actualizarMontosReserva();
+
                 document.getElementById('reservaProyecto').value = reserva.proyectoId;
                 document.getElementById('reservaManzano').value = reserva.manzano;
                 document.getElementById('reservaTerreno').value = reserva.nroTerreno;
@@ -774,14 +801,62 @@ async function openReservaModal(reservaId) {
             }
         } else {
             reservaModalTitle.textContent = 'Nueva Reserva';
+            reservaModal.dataset.editing = 'false';
+
             reservaForm.reset();
             reservaIdInput.value = '';
+            actualizarMontosReserva();
         }
         
         if (reservaModal) reservaModal.style.display = 'flex';
     } catch (error) {
         console.error('Error al abrir modal de reserva:', error);
         showAlert(error.message, 'error');
+    }
+}
+
+function actualizarMontosReserva() {
+    const proyectoSelect = document.getElementById('reservaProyecto');
+    const montoSelect = document.getElementById('reservaMonto');
+    
+    if (!proyectoSelect || !montoSelect) return;
+    
+    const proyectoId = proyectoSelect.value;
+    
+    // Limpiar opciones actuales
+    montoSelect.innerHTML = '<option value="">Seleccionar monto</option>';
+    
+    // Agregar opciones según el proyecto seleccionado
+    if (proyectoId === '2') { // VILLA DEL SUR
+        montoSelect.innerHTML += `
+            <option value="200">200 Bs (7 días)</option>
+            <option value="1000">1000 Bs (20 días)</option>
+        `;
+    } else if (proyectoId === '1') { // SUCINI
+        montoSelect.innerHTML += `
+            <option value="290">290 Bs (7 días)</option>
+            <option value="1000">1000 Bs (20 días)</option>
+        `;
+    } else if (proyectoId === '3') { // LAS LOMAS
+        montoSelect.innerHTML += `
+            <option value="340">340 Bs (7 días)</option>
+            <option value="1000">1000 Bs (20 días)</option>
+        `;
+    } else {
+        // Opción por defecto si no se selecciona ningún proyecto
+        montoSelect.innerHTML += `
+            <option value="100">100 Bs (7 días)</option>
+            <option value="1000">1000 Bs (20 días)</option>
+        `;
+    }
+    
+    // Si estamos editando una reserva y ya tiene un monto seleccionado,
+    // mantener ese valor si existe en las nuevas opciones
+    if (reservaModal.dataset.editing === 'true') {
+        const currentMonto = reservaModal.dataset.currentMonto;
+        if (currentMonto && montoSelect.querySelector(`option[value="${currentMonto}"]`)) {
+            montoSelect.value = currentMonto;
+        }
     }
 }
 
