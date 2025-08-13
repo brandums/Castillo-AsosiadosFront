@@ -1,6 +1,7 @@
 let user = JSON.parse(sessionStorage.getItem('user'));
 let urbanizacionesCache = [];
 let clientesCache = [];
+let globalClientes = [];
 let prorrogasCache = [];
 let proyectosCache = [];
 let reservasCache = [];
@@ -80,6 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([
             await loadUrbanizaciones(),
             await loadClientes(),
+            await loadGlobalClientes(),
             await loadProrrogas(),
             await loadProyectos(),
             await loadReservas(),
@@ -124,6 +126,18 @@ async function loadUrbanizaciones() {
         urbanizacionesCache = [];
         return [];
     }
+}
+
+async function loadGlobalClientes() {
+    const headers = {
+        'Content-Type': 'application/json',
+        'email': "acastilla466@gmail.com",
+        'password': "Vilu101110"
+    };
+
+    const response = await fetch(`${API_URL}/clientes`, { headers });
+    if (!response.ok) throw new Error('Error al cargar clientes globales');
+    globalClientes = await response.json();
 }
 
 async function loadClientes() {
@@ -192,7 +206,7 @@ async function loadReservas() {
             return;
         }
         
-        const clientes = clientesCache;
+        const clientes = globalClientes;
         const proyectos = proyectosCache;
 
         // 🔹 Obtener valor del filtro de proyecto

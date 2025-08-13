@@ -724,6 +724,7 @@ async function loadReservas() {
         const clientes = globalClientes;
         const proyectos = globalProyectos;
         const usuarios = globalUsuarios;
+        
 
         // 🔹 Obtener valor del filtro de proyecto
         const filtroProyecto = document.getElementById('filtroReservas')?.value || 'todos';
