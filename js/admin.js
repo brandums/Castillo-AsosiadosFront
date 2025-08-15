@@ -870,7 +870,7 @@ async function loadContratos() {
                 <td>${contrato.nroTerreno}</td>
                 <td>${formatDate(contrato.fechaFirma)}</td>
                 <td>${asesor.nombre}</td>
-                <td>${cliente.nombre + cliente.apellido}</td>
+                <td>${cliente.nombre + " " + cliente.apellido}</td>
                 <td>${equipoNombre}</td>
                 <td>${contrato.metodoPago}</td>
                 <td>${contrato.monto}</td>
@@ -1398,4 +1398,3 @@ function initFiltroRanking() {
         loadRanking();
     });
 }
-

@@ -17,8 +17,10 @@ const getAuthHeaders = (extra = {}) => ({
     ...extra
 });
 
-async function fetchJson(url, options = {}, defaultErrorMsg = 'Error en la solicitud') {
+async function fetchJson(url, options = {}, defaultErrorMsg = 'Error en la solicitud', button = null) {
     try {
+        if (button) setButtonLoading(button, true);
+        
         const mergedOptions = {
             ...options
         };
@@ -35,28 +37,59 @@ async function fetchJson(url, options = {}, defaultErrorMsg = 'Error en la solic
             const message = (body && (body.error || body.message || body.msg)) || defaultErrorMsg;
             throw new Error(message);
         }
+        
         return body;
     } catch (err) {
         throw new Error(err.message || defaultErrorMsg);
+    } finally {
+        if (button) setButtonLoading(button, false);
     }
 }
 
 let _alertTimeout = null;
-function showAlert(message, type = 'success') {
-    const alertBox = $('alertBox');
-    if (!alertBox) {
-        console.warn('No se encontró #alertBox para showAlert');
-        return;
-    }
-    alertBox.textContent = message;
-    alertBox.className = `alert ${type}`;
-    alertBox.style.display = 'block';
+function showAlert(message, type = 'success', position = 'top-end') {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: position,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
 
-    if (_alertTimeout) clearTimeout(_alertTimeout);
-    _alertTimeout = setTimeout(() => {
-        alertBox.style.display = 'none';
-        _alertTimeout = null;
-    }, 5000);
+    let icon = 'success';
+    let background = '#28a745';
+    let color = 'white';
+
+    switch(type) {
+        case 'error':
+            icon = 'error';
+            background = '#dc3545';
+            break;
+        case 'warning':
+            icon = 'warning';
+            background = '#ffc107';
+            color = '#212529';
+            break;
+        case 'info':
+            icon = 'info';
+            background = '#17a2b8';
+            break;
+        case 'question':
+            icon = 'question';
+            background = '#6c757d';
+            break;
+    }
+
+    Toast.fire({
+        icon: icon,
+        title: message,
+        background: background,
+        color: color
+    });
 }
 
 function getBadgeClass(estado) {
@@ -399,7 +432,8 @@ function openEditModal(clienteId) {
 
 async function saveEditedClient(e) {
     e.preventDefault();
-
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    
     const clienteId = $('editClienteId').value;
     const nombre = $('editNombre').value;
     const apellido = $('editApellido').value;
@@ -423,9 +457,9 @@ async function saveEditedClient(e) {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(body)
-        }, 'Error al actualizar cliente');
+        }, 'Error al actualizar cliente', submitButton);
 
-        showAlert(result?.message || 'Cliente actualizado correctamente');
+        showAlert(result?.message || 'Cliente actualizado correctamente', 'success');
         const editModal = $('editClientModal');
         if (editModal) editModal.style.display = 'none';
 
@@ -507,31 +541,32 @@ function setupEventListeners() {
     if (clientForm) {
         clientForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const nombre = $('nombre').value;
-            const apellido = $('apellido').value;
-            const celular = $('celular').value;
-            const urbanizacion = $('urbanizacion').value;
-            const lote = $('lote').value;
-            const manzano = $('manzano').value;
-
+            const submitButton = clientForm.querySelector('button[type="submit"]');
+            
             try {
+                const nombre = $('nombre').value;
+                const apellido = $('apellido').value;
+                const celular = $('celular').value;
+                const urbanizacion = $('urbanizacion').value;
+                const lote = $('lote').value;
+                const manzano = $('manzano').value;
+
                 const body = { nombre, apellido, celular, proyectoId: urbanizacion, lote, manzano };
 
                 const result = await fetchJson(`${API_URL}/clientes`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(body)
-                }, 'Error al registrar cliente');
+                }, 'Error al registrar cliente', submitButton);
 
-                showAlert(result?.message || 'Cliente registrado correctamente');
+                showAlert(result?.message || 'Cliente registrado correctamente', 'success');
                 const modal = $('clientModal');
                 if (modal) modal.style.display = 'none';
                 clientForm.reset();
 
                 // Actualizar cache
                 const newCliente = {
-                    id: result?.clienteId ?? (new Date().getTime()), // fallback id si no viene
+                    id: result?.clienteId ?? (new Date().getTime()),
                     nombre,
                     apellido,
                     celular,
@@ -593,6 +628,7 @@ function setupEventListeners() {
     if (prorrogaForm) {
         prorrogaForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const submitButton = prorrogaForm.querySelector('button[type="submit"]');
 
             const clienteId = $('prorrogaClienteId').value;
             const fechaLimite = $('prorrogaFechaLimite').value;
@@ -606,9 +642,9 @@ function setupEventListeners() {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(body)
-                }, 'Error al crear solicitud de prórroga');
+                }, 'Error al crear solicitud de prórroga', submitButton);
 
-                showAlert(result?.message || 'Prórroga solicitada');
+                showAlert(result?.message || 'Prórroga solicitada', 'success');
                 if (prorrogaModal) prorrogaModal.style.display = 'none';
                 prorrogaForm.reset();
 
@@ -661,6 +697,7 @@ function setupEventListeners() {
     if (reservaForm) {
         reservaForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const submitButton = reservaForm.querySelector('button[type="submit"]');
             
             const reservaId = document.getElementById('reservaId').value;
             const proyectoId = document.getElementById('reservaProyecto').value;
@@ -681,6 +718,8 @@ function setupEventListeners() {
 
                 const method = reservaId ? 'PUT' : 'POST';
                 const url = reservaId ? `${API_URL}/reservas/${reservaId}` : `${API_URL}/reservas`;
+                
+                setButtonLoading(submitButton, true);
                 
                 const response = await fetch(url, {
                     method,
@@ -703,12 +742,15 @@ function setupEventListeners() {
                 }
                 
                 const result = await response.json();
-                showAlert(result.message);
+                showAlert(result.message, 'success');
                 if (reservaModal) reservaModal.style.display = 'none';
+                reservasCache = [];
                 await loadReservas();
             } catch (error) {
                 console.error('Error al guardar reserva:', error);
                 showAlert(error.message, 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         });
     }
@@ -837,10 +879,12 @@ function actualizarMontosReserva() {
     
     const proyectoId = proyectoSelect.value;
     
-    // Limpiar opciones actuales
     montoSelect.innerHTML = '<option value="">Seleccionar monto</option>';
-    
-    // Agregar opciones según el proyecto seleccionado
+
+    montoSelect.innerHTML += `
+        <option value="100">100 Bs (Precio Feria - 7 días)</option>
+    `;
+
     if (proyectoId === '2') { // VILLA DEL SUR
         montoSelect.innerHTML += `
             <option value="200">200 Bs (7 días)</option>
@@ -857,15 +901,11 @@ function actualizarMontosReserva() {
             <option value="1000">1000 Bs (20 días)</option>
         `;
     } else {
-        // Opción por defecto si no se selecciona ningún proyecto
         montoSelect.innerHTML += `
-            <option value="100">100 Bs (7 días)</option>
             <option value="1000">1000 Bs (20 días)</option>
         `;
     }
     
-    // Si estamos editando una reserva y ya tiene un monto seleccionado,
-    // mantener ese valor si existe en las nuevas opciones
     if (reservaModal.dataset.editing === 'true') {
         const currentMonto = reservaModal.dataset.currentMonto;
         if (currentMonto && montoSelect.querySelector(`option[value="${currentMonto}"]`)) {
@@ -873,6 +913,7 @@ function actualizarMontosReserva() {
         }
     }
 }
+
 
 function openProrrogaModal(clienteId, fechaLimite) {
     const prorrogaModal = $('prorrogaModal');
@@ -893,10 +934,8 @@ function initFiltroReservas() {
     const select = document.getElementById('filtroReservas');
     if (!select) return;
 
-    // Limpiar y agregar "Todos"
     select.innerHTML = '<option value="todos">Todos</option>';
 
-    // Agregar cada proyecto
     proyectosCache.forEach(proyecto => {
         const opt = document.createElement('option');
         opt.value = proyecto.id;
@@ -904,9 +943,34 @@ function initFiltroReservas() {
         select.appendChild(opt);
     });
 
-    // Evento cambio -> recargar tablas
     select.addEventListener('change', () => {
         loadReservas();
-        
     });
+}
+
+
+
+
+
+
+
+
+
+// Agregar esta función en common.js o agent.js
+function setButtonLoading(button, isLoading, loadingText = 'Procesando...') {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            ${loadingText}
+        `;
+        button.disabled = true;
+    } else {
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+        }
+        button.disabled = false;
+    }
 }
