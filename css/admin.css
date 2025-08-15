@@ -106,3 +106,67 @@
     font-style: italic;
     color: #666;
 }
+
+
+
+
+
+
+
+
+
+
+
+/* Spinner para botones */
+.spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: text-bottom;
+    border: 0.2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    -webkit-animation: spinner-border .75s linear infinite;
+    animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Estilos para SweetAlert2 */
+.swal2-popup {
+    font-family: 'Montserrat', sans-serif;
+}
+
+.swal2-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+}
+
+/* Estilos para las notificaciones toast */
+.swal2-toast {
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+/* Colores para los diferentes tipos de alerta */
+.swal2-success {
+    background-color: #28a745 !important;
+    color: white !important;
+}
+
+.swal2-error {
+    background-color: #dc3545 !important;
+    color: white !important;
+}
+
+.swal2-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.swal2-info {
+    background-color: #17a2b8 !important;
+    color: white !important;
+}

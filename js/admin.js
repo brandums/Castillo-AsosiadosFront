@@ -329,6 +329,7 @@ function setupEventListeners() {
     
     if (confirmProrrogaBtn) {
         confirmProrrogaBtn.addEventListener('click', async () => {
+            const submitButton = confirmProrrogaBtn;
             const prorrogaId = confirmProrrogaBtn.dataset.id;
             const decisionInput = document.querySelector('input[name="decision"]:checked');
             const decision = decisionInput ? decisionInput.value : null;
@@ -337,13 +338,15 @@ function setupEventListeners() {
             const comentarioInput = document.getElementById('comentario');
             const comentario = comentarioInput ? comentarioInput.value : '';
             
-            const headers = {
-                'Content-Type': 'application/json',
-                'email': user.email,
-                'password': user.password
-            };
-
             try {
+                setButtonLoading(submitButton, true);
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'email': user.email,
+                    'password': user.password
+                };
+
                 const response = await fetch(`${API_URL}/prorrogas/${prorrogaId}`, {
                     method: 'PUT',
                     headers,
@@ -360,12 +363,16 @@ function setupEventListeners() {
                 }
                 
                 const result = await response.json();
-                showAlert(result.message);
+                showAlert(result.message, 'success');
                 if (prorrogaModal) prorrogaModal.style.display = 'none';
+                
                 await loadProrrogas();
+                
             } catch (error) {
                 console.error('Error al actualizar prórroga:', error);
                 showAlert(error.message, 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
             }
         });
     }
@@ -384,28 +391,6 @@ function setupEventListeners() {
     if (cancelUserBtn) {
         cancelUserBtn.addEventListener('click', () => {
             if (userModal) userModal.style.display = 'none';
-        });
-    }
-    
-    if (userForm) {
-        userForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const userId = document.getElementById('userId').value;
-            const nombre = document.getElementById('userNombre').value;
-            const apellido = document.getElementById('userApellido').value;
-            const email = document.getElementById('userEmail').value;
-            const celular = document.getElementById('userCelular').value;
-            const rol = document.getElementById('userRol').value;
-            const password = document.getElementById('userPassword').value;
-            
-            try {
-                showAlert('Funcionalidad de usuarios aún no implementada', 'warning');
-                if (userModal) userModal.style.display = 'none';
-            } catch (error) {
-                console.error('Error al guardar usuario:', error);
-                showAlert(error.message, 'error');
-            }
         });
     }
     
@@ -454,48 +439,70 @@ function setupEventListeners() {
     }
     
     if (teamForm) {
-        teamForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
+    teamForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const submitButton = teamForm.querySelector('button[type="submit"]');
+        
+        try {
             const teamId = document.getElementById('teamId').value;
             const nombre = document.getElementById('teamNombre').value;
             const miembrosSelect = document.getElementById('teamMiembros');
             const miembros = Array.from(miembrosSelect.selectedOptions).map(opt => opt.value);
             
-            try {
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'email': user.email,
-                    'password': user.password
-                };
+            setButtonLoading(submitButton, true);
+            
+            const headers = {
+                'Content-Type': 'application/json',
+                'email': user.email,
+                'password': user.password
+            };
 
-                const method = teamId ? 'PUT' : 'POST';
-                const url = teamId ? `${API_URL}/equipos/${teamId}` : `${API_URL}/equipos`;
-                
-                const response = await fetch(url, {
-                    method,
-                    headers,
-                    body: JSON.stringify({
+            const method = teamId ? 'PUT' : 'POST';
+            const url = teamId ? `${API_URL}/equipos/${teamId}` : `${API_URL}/equipos`;
+            
+            const response = await fetch(url, {
+                method,
+                headers,
+                body: JSON.stringify({ nombre, miembros })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al guardar equipo');
+            }
+            
+            const result = await response.json();
+            showAlert(result.message, 'success');
+            if (teamModal) teamModal.style.display = 'none';
+            
+            if (!teamId) {
+                const nuevoEquipo = {
+                    id: result.id || result.equipoId,
+                    nombre,
+                    miembros
+                };
+                globalEquipos.unshift(nuevoEquipo);
+            } else {
+                const index = globalEquipos.findIndex(t => t.id === teamId);
+                if (index !== -1) {
+                    globalEquipos[index] = {
+                        ...globalEquipos[index],
                         nombre,
                         miembros
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error al guardar equipo');
+                    };
                 }
-                
-                const result = await response.json();
-                showAlert(result.message);
-                if (teamModal) teamModal.style.display = 'none';
-                await loadEquipos();
-            } catch (error) {
-                console.error('Error al guardar equipo:', error);
-                showAlert(error.message, 'error');
             }
-        });
-    }
+            
+            loadGlobalEquipos();
+            loadEquipos();
+        } catch (error) {
+            console.error('Error al guardar equipo:', error);
+            showAlert(error.message, 'error');
+        } finally {
+            setButtonLoading(submitButton, false);
+        }
+    });
+}
     
     const reservaModal = document.getElementById('reservaModal');
     const closeReservaModalBtn = document.getElementById('closeReservaModalBtn');
@@ -561,6 +568,7 @@ function setupEventListeners() {
                 const result = await response.json();
                 showAlert(result.message);
                 if (reservaModal) reservaModal.style.display = 'none';
+                reservasCache = [];
                 await loadReservas();
             } catch (error) {
                 console.error('Error al guardar reserva:', error);
@@ -637,12 +645,6 @@ function openUserModal(userId, usuarios) {
     }
     
     if (userModal) userModal.style.display = 'flex';
-}
-
-function confirmDeleteUser(userId) {
-    if (confirm('¿Está seguro que desea eliminar este usuario?')) {
-        showAlert('Funcionalidad de eliminar usuario aún no implementada', 'warning');
-    }
 }
 
 async function loadEquipos() {
@@ -1064,34 +1066,44 @@ async function openReservaModal(reservaId) {
 }
 
 async function ampliarReserva(reservaId, dias) {
-    if (!confirm(`¿Está seguro que desea ampliar esta reserva por ${dias} días?`)) {
-        return;
-    }
-    
-    try {
-        const headers = {
-            'Content-Type': 'application/json',
-            'email': user.email,
-            'password': user.password
-        };
+    const { isConfirmed } = await Swal.fire({
+        title: 'Ampliar Reserva',
+        text: `¿Está seguro que desea ampliar esta reserva por ${dias} días?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, ampliar',
+        cancelButtonText: 'Cancelar'
+    });
 
-        const response = await fetch(`${API_URL}/reservas/${reservaId}/ampliar`, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify({ dias: parseInt(dias) })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Error al ampliar reserva');
+    if (isConfirmed) {
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                'email': user.email,
+                'password': user.password
+            };
+
+            const response = await fetch(`${API_URL}/reservas/${reservaId}/ampliar`, {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify({ dias: parseInt(dias) })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al ampliar reserva');
+            }
+            
+            const result = await response.json();
+            showAlert(result.message, 'success');
+            reservasCache = [];
+            await loadReservas();
+        } catch (error) {
+            console.error('Error al ampliar reserva:', error);
+            showAlert(error.message, 'error');
         }
-        
-        const result = await response.json();
-        showAlert(result.message);
-        await loadReservas();
-    } catch (error) {
-        console.error('Error al ampliar reserva:', error);
-        showAlert(error.message, 'error');
     }
 }
 
@@ -1107,19 +1119,69 @@ async function firmarReserva(reservaId) {
     openFirmarReservaModal(reservaId);
 }
 
-function showAlert(message, type = '') {
-    const alertBox = document.createElement('div');
-    alertBox.className = `alert ${type}`;
-    alertBox.textContent = message;
 
-    document.body.appendChild(alertBox);
+function showAlert(message, type = 'success', position = 'top-end') {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: position,
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
 
-    setTimeout(() => {
-        alertBox.remove();
-    }, 3000);
+    let icon = 'success';
+    let background = '#28a745';
+    let color = 'white';
+
+    switch(type) {
+        case 'error':
+            icon = 'error';
+            background = '#dc3545';
+            break;
+        case 'warning':
+            icon = 'warning';
+            background = '#ffc107';
+            color = '#212529';
+            break;
+        case 'info':
+            icon = 'info';
+            background = '#17a2b8';
+            break;
+        case 'question':
+            icon = 'question';
+            background = '#6c757d';
+            break;
+    }
+
+    Toast.fire({
+        icon: icon,
+        title: message,
+        background: background,
+        color: color
+    });
 }
 
-
+function setButtonLoading(button, isLoading, loadingText = 'Procesando...') {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            ${loadingText}
+        `;
+        button.disabled = true;
+    } else {
+        if (button.dataset.originalText) {
+            button.innerHTML = button.dataset.originalText;
+        }
+        button.disabled = false;
+    }
+}
 
 
 
@@ -1146,17 +1208,20 @@ if (cancelFirmarReservaBtn) {
 if (firmarReservaForm) {
     firmarReservaForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
-        const reservaId = document.getElementById('firmarReservaId').value;
-        const metodoPago = document.getElementById('firmarMetodoPago').value;
-        const monto = document.getElementById('firmarMonto').value;
-        
-        if (!metodoPago || !monto) {
-            showAlert('Por favor complete todos los campos requeridos', 'error');
-            return;
-        }
+        const submitButton = firmarReservaForm.querySelector('button[type="submit"]');
         
         try {
+            const reservaId = document.getElementById('firmarReservaId').value;
+            const metodoPago = document.getElementById('firmarMetodoPago').value;
+            const monto = document.getElementById('firmarMonto').value;
+            
+            if (!metodoPago || !monto) {
+                showAlert('Por favor complete todos los campos requeridos', 'warning');
+                return;
+            }
+            
+            setButtonLoading(submitButton, true);
+            
             const headers = {
                 'Content-Type': 'application/json',
                 'email': user.email,
@@ -1175,12 +1240,18 @@ if (firmarReservaForm) {
             }
             
             const result = await response.json();
-            showAlert(result.message);
+            showAlert(result.message, 'success');
             if (firmarReservaModal) firmarReservaModal.style.display = 'none';
+            reservasCache = [];
+            contratosCache = [];
             await loadReservas();
+            await loadContratos();
+            
         } catch (error) {
             console.error('Error al firmar reserva:', error);
             showAlert(error.message, 'error');
+        } finally {
+            setButtonLoading(submitButton, false);
         }
     });
 }
@@ -1331,7 +1402,6 @@ function initFiltroReservas() {
     // Evento cambio -> recargar tablas
     select.addEventListener('change', () => {
         loadReservas();
-        
     });
 }
 
