@@ -412,6 +412,11 @@ tr:hover {
     color: var(--success);
 }
 
+.badge-danger {
+    background-color: #c7c387;
+    color: #ffffff;    
+}
+
 .badge-warning {
     background-color: #ffebee;
     color: var(--warning);

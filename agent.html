@@ -50,35 +50,59 @@
         <div class="alert" id="alertBox"></div>
         
         <div class="tabs">
-            <button class="tab-btn active" data-tab="clientes">Mis Clientes</button>
+            <button class="tab-btn active" data-tab="prospectos">Mis Prospectos</button>
+            <button class="tab-btn" data-tab="clientesFijos">Mis Clientes</button>
             <button class="tab-btn" data-tab="prorrogas">Mis Prórrogas</button>
             <button class="tab-btn" data-tab="reservas">Reservas</button>
         </div>
-        
-        <!-- Tabla de Clientes -->
-        <div class="tab-content active" id="clientesTab">
+    
+        <!-- Tabla de Prospectos -->
+        <div class="tab-content active" id="prospectosTab">
             <div class="card">
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Mis Clientes</h2>
-                    <button class="btn btn-primary" id="addClientBtn">
-                        <i class="fas fa-plus"></i> Nuevo Cliente
+                    <h2>Mis Prospectos</h2>
+                    <button class="btn btn-primary" id="addProspectoBtn">
+                        <i class="fas fa-plus"></i> Nuevo Prospecto
                     </button>
                 </div>
                 <div class="table-container">
-                    <table id="clientsTable">
+                    <table id="prospectosTable">
                         <thead>
                             <tr>
                                 <th>Nombre</th>
                                 <th>Celular</th>
-                                <th>Urbanización</th>
-                                <th>Lote</th>
-                                <th>Manzano</th>
-                                <th>Creación</th>
+                                <th>Registro</th>
                                 <th>Quedan</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="clientsTableBody"></tbody>
+                        <tbody id="prospectosTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de ClientesFijos -->
+        <div class="tab-content" id="clientesFijosTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Mis Clientes</h2>
+                    <button class="btn btn-primary" id="addClientFBtn">
+                        <i class="fas fa-plus"></i> Nuevo Cliente
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="clientesFijosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Telefono</th>
+                                <th>Firmas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesFijosTableBody"></tbody>
                     </table>
                 </div>
             </div>
@@ -133,7 +157,7 @@
                                 <th>Cliente</th>
                                 <th>Monto</th>
                                 <th>Fecha Reserva</th>
-                                <th>Días Restantes</th>
+                                <th>Plazo</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
@@ -141,6 +165,73 @@
                     </table>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal para nuevo cliente fijo -->
+    <div class="modal" id="clientFijoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Registrar Nuevo Cliente Fijo</h3>
+                <button class="close-btn" id="closeClientFModalBtn">&times;</button>
+            </div>
+            <form id="clientFijoForm">
+                <div class="form-row">
+                    <div class="form-group form-group-inline">
+                        <label for="cfNombre">Nombre</label>
+                        <input type="text" id="cfNombre" class="form-control" required>
+                    </div>
+                    <div class="form-group form-group-inline">
+                        <label for="cfApellido">Apellido</label>
+                        <input type="text" id="cfApellido" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cfCelular">Celular</label>
+                    <input type="tel" id="cfCelular" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cfProyecto">Proyecto</label>
+                    <select id="cfProyecto" class="form-control" required>
+                        <option value="">Seleccionar proyecto</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group form-group-inline">
+                        <label for="cfLote">Lote</label>
+
+                        <input 
+                            type="number" 
+                            id="cfLote" 
+                            class="form-control" 
+                            required 
+                            inputmode="numeric" 
+                            min="1" 
+                            step="1"
+                            placeholder="Ej: 12">
+                        <small class="error-text" id="terrenoError" style="color:red; display:none;">
+                            Solo se permite un número de terreno.
+                        </small>
+                    </div>
+                    <div class="form-group form-group-inline">
+                        <label for="cfManzano">Manzano</label>
+                        <input type="text" id="cfManzano" class="form-control" placeholder="Ej: 10" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cfFechaPago">Fecha de Pago</label>
+                    <input type="date" id="cfFechaPago" class="form-control" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelClientFBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -163,11 +254,22 @@
                 <div class="form-row">
                     <div class="form-group form-group-inline">
                         <label for="reservaManzano">Manzano</label>
-                        <input type="text" id="reservaManzano" class="form-control" required>
+                        <input type="text" id="reservaManzano" class="form-control" placeholder="Ej: 10" required>
                     </div>
                     <div class="form-group form-group-inline">
                         <label for="reservaTerreno">Número de Terreno</label>
-                        <input type="text" id="reservaTerreno" class="form-control" required>
+                        <input 
+                            type="number" 
+                            id="reservaTerreno" 
+                            class="form-control" 
+                            required 
+                            inputmode="numeric" 
+                            min="1" 
+                            step="1"
+                            placeholder="Ej: 12">
+                        <small class="error-text" id="terrenoError" style="color:red; display:none;">
+                            Solo se permite un número de terreno.
+                        </small>
                     </div>
                 </div>
                 
@@ -217,7 +319,7 @@
     <div class="modal" id="clientModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Registrar Nuevo Cliente</h3>
+                <h3>Registrar Nuevo Prospecto</h3>
                 <button class="close-btn" id="closeClientModalBtn">&times;</button>
             </div>
             <form id="clientForm">
@@ -234,21 +336,6 @@
                 <div class="form-group">
                     <label for="celular">Celular</label>
                     <input type="tel" id="celular" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="urbanizacion">Urbanización</label>
-                    <select id="urbanizacion" class="form-control" required></select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="lote">Lote</label>
-                    <input type="text" id="lote" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="manzano">Manzano</label>
-                    <input type="text" id="manzano" class="form-control" required>
                 </div>
                 
                 <div class="modal-footer">
@@ -293,7 +380,7 @@
 <div class="modal" id="editClientModal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3>Editar Cliente</h3>
+            <h3>Editar Prospecto</h3>
             <button class="close-btn" id="closeEditClientModalBtn">&times;</button>
         </div>
         <form id="editClientForm">
@@ -312,21 +399,6 @@
             <div class="form-group">
                 <label for="editCelular">Celular</label>
                 <input type="tel" id="editCelular" class="form-control" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="editUrbanizacion">Urbanización</label>
-                <select id="editUrbanizacion" class="form-control" required></select>
-            </div>
-            
-            <div class="form-group">
-                <label for="editLote">Lote</label>
-                <input type="text" id="editLote" class="form-control" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="editManzano">Manzano</label>
-                <input type="text" id="editManzano" class="form-control" required>
             </div>
             
             <div class="modal-footer">

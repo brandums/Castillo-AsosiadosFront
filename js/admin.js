@@ -4,10 +4,12 @@ let globalUsuarios = [];
 let globalProyectos = [];
 let globalClientes = [];
 let globalEquipos = [];
+let globalprospectos = [];
 let reservasCache = [];
 let contratosCache = [];
 let clientesCache = [];
 let rankinCache = [];
+let prospectosUsuarioCache = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!user || user.rol !== 'Admin') {
@@ -23,6 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadGlobalProyectos(),
             loadGlobalClientes(),
             loadGlobalEquipos(),
+            loadGlobalProspectos(),
+            loadProspectosPorUsuario()
         ]);
 
         initFiltroReservas();
@@ -30,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initFiltroClientesFijos();
         initFiltroRanking();
         await loadUsuarios();
+        await loadProspectos();
         await loadClientes();
         await loadProrrogas();
         await loadEquipos();
@@ -43,6 +48,77 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
+async function loadProspectosPorUsuario() {
+    const tbody = document.getElementById('prospectosUsuarioTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">Cargando estadísticas...</td></tr>';
+    
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'email': user.email,
+            'password': user.password
+        };
+
+        let datos = [];
+        if (prospectosUsuarioCache.length === 0) {
+            const response = await fetch(`${API_URL}/usuarios/prospectos-count`, { headers });
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay datos disponibles</td></tr>';
+                    return;
+                }
+                
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${response.status} al cargar estadísticas`);
+            }
+            
+            datos = await response.json();
+            prospectosUsuarioCache = datos;
+        } else {
+            datos = prospectosUsuarioCache;
+        }
+        
+        if (tbody) tbody.innerHTML = '';
+        
+        if (!datos || datos.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay usuarios con prospectos</td></tr>';
+            return;
+        }
+
+        datos.forEach(usuario => {            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${usuario.nombre} ${usuario.apellido}</td>
+                <td>
+                    <span class="badge ${usuario.cantidadProspectos > 0 ? 'badge-success' : 'badge-warning'}">
+                        ${usuario.cantidadProspectos} prospectos
+                    </span>
+                </td>
+            `;
+            if (tbody) tbody.appendChild(row);
+        });
+        
+    } catch (error) {
+        console.error('Error al cargar prospectos por usuario:', error);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center error">${error.message}</td></tr>`;
+        showAlert(`Error al cargar estadísticas: ${error.message}`, 'error');
+    }
+}
+
+async function loadGlobalProspectos() {
+    const headers = {
+        'Content-Type': 'application/json',
+        'email': user.email,
+        'password': user.password
+    };
+
+    const response = await fetch(`${API_URL}/prospectos`, { headers });
+    if (!response.ok) throw new Error('Error al cargar prospectos globales');
+    
+    globalprospectos = await response.json();
+}
+
 async function loadGlobalClientes() {
     const headers = {
         'Content-Type': 'application/json',
@@ -52,6 +128,7 @@ async function loadGlobalClientes() {
 
     const response = await fetch(`${API_URL}/clientes`, { headers });
     if (!response.ok) throw new Error('Error al cargar clientes globales');
+    
     globalClientes = await response.json();
 }
 
@@ -116,6 +193,52 @@ async function loadGlobalEquipos() {
         console.error('Error loadGlobalEquipos:', error);
         globalEquipos = [];
         showAlert(`No se pudieron cargar los equipos globales: ${error.message}`, 'error');
+    }
+}
+
+async function loadProspectos() {
+    try {
+        const usuarios = globalUsuarios;
+
+        const tbody = document.getElementById('prospectosTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        if (!globalprospectos || globalprospectos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay prospectos registrados</td></tr>';
+            return;
+        }
+
+        globalprospectos.forEach(prospecto => {
+            const agente = usuarios.find(u => u.id === prospecto.agenteId);
+            const nombreAgente = agente ? `${agente.nombre} ${agente.apellido}` : 'N/A';
+            
+            const diasRestantes = calcularDiasRestantes(prospecto.fecha);
+            const esReciente = diasRestantes >= 7;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${prospecto.nombre} ${prospecto.apellido}</td>
+                <td>${prospecto.celular}</td>
+                <td>${nombreAgente}</td>
+                <td>${formatDate(prospecto.fecha)}</td>
+                <td>
+                    <span class="badge ${esReciente ? 'badge-success' : 'badge-warning'}">
+                        ${esReciente ? 'Reciente' : 'Antiguo'}
+                    </span>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar prospectos:', error);
+        showAlert(`Error al cargar prospectos: ${error.message}`, 'error');
+        
+        const tbody = document.getElementById('prospectosTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
+        }
     }
 }
 
@@ -201,7 +324,7 @@ async function loadProrrogas() {
             return;
         }
 
-        const clientes = globalClientes;
+        const clientes = globalprospectos;
         const usuarios = globalUsuarios;
 
         prorrogas.forEach(prorroga => {
@@ -380,7 +503,6 @@ function setupEventListeners() {
     const userModal = document.getElementById('userModal');
     const closeUserModalBtn = document.getElementById('closeUserModalBtn');
     const cancelUserBtn = document.getElementById('cancelUserBtn');
-    const userForm = document.getElementById('userForm');
     
     if (closeUserModalBtn) {
         closeUserModalBtn.addEventListener('click', () => {
@@ -576,6 +698,214 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Event listeners para el modal de firma en X días
+    const firmaXDiasModal = document.getElementById('firmaXDiasModal');
+    const closeFirmaXDiasModalBtn = document.getElementById('closeFirmaXDiasModalBtn');
+    const cancelFirmaXDiasBtn = document.getElementById('cancelFirmaXDiasBtn');
+    const firmaXDiasForm = document.getElementById('firmaXDiasForm');
+
+    if (closeFirmaXDiasModalBtn) {
+        closeFirmaXDiasModalBtn.addEventListener('click', () => {
+            if (firmaXDiasModal) firmaXDiasModal.style.display = 'none';
+        });
+    }
+
+    if (cancelFirmaXDiasBtn) {
+        cancelFirmaXDiasBtn.addEventListener('click', () => {
+            if (firmaXDiasModal) firmaXDiasModal.style.display = 'none';
+        });
+    }
+
+    if (firmaXDiasForm) {
+        firmaXDiasForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = firmaXDiasForm.querySelector('button[type="submit"]');
+            
+            try {
+                const reservaId = document.getElementById('firmaReservaId').value;
+                const dias = document.getElementById('diasFirma').value;
+                
+                if (!dias || dias <= 0) {
+                    showAlert('Por favor ingrese una cantidad válida de días', 'warning');
+                    return;
+                }
+                
+                setButtonLoading(submitButton, true);
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'email': user.email,
+                    'password': user.password
+                };
+
+                const response = await fetch(`${API_URL}/reservas/${reservaId}/accion`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({ 
+                        accion: 'firma_en_x_dias', 
+                        dias: parseInt(dias),
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al programar firma');
+                }
+                
+                const result = await response.json();
+                showAlert(result.message, 'success');
+                if (firmaXDiasModal) firmaXDiasModal.style.display = 'none';
+                reservasCache = [];
+                await loadReservas();
+                
+            } catch (error) {
+                console.error('Error al programar firma:', error);
+                showAlert(error.message, 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
+            }
+        });
+    }
+
+    // Event listeners para el modal de declinar
+    const declinarModal = document.getElementById('declinarModal');
+    const closeDeclinarModalBtn = document.getElementById('closeDeclinarModalBtn');
+    const cancelDeclinarBtn = document.getElementById('cancelDeclinarBtn');
+    const declinarForm = document.getElementById('declinarForm');
+
+    if (closeDeclinarModalBtn) {
+        closeDeclinarModalBtn.addEventListener('click', () => {
+            if (declinarModal) declinarModal.style.display = 'none';
+        });
+    }
+
+    if (cancelDeclinarBtn) {
+        cancelDeclinarBtn.addEventListener('click', () => {
+            if (declinarModal) declinarModal.style.display = 'none';
+        });
+    }
+
+    if (declinarForm) {
+        declinarForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = declinarForm.querySelector('button[type="submit"]');
+            
+            try {
+                const reservaId = document.getElementById('declinarReservaId').value;
+                const tipoInput = document.querySelector('input[name="tipoDeclinacion"]:checked');
+                
+                if (!tipoInput) {
+                    showAlert('Por favor seleccione un tipo de declinación', 'warning');
+                    return;
+                }
+                
+                const tipo = tipoInput.value;
+                
+                setButtonLoading(submitButton, true);
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'email': user.email,
+                    'password': user.password
+                };
+
+                const response = await fetch(`${API_URL}/reservas/${reservaId}/accion`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({ 
+                        accion: tipo,
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al declinar reserva');
+                }
+                
+                const result = await response.json();
+                showAlert(result.message, 'success');
+                if (declinarModal) declinarModal.style.display = 'none';
+                reservasCache = [];
+                await loadReservas();
+                
+            } catch (error) {
+                console.error('Error al declinar reserva:', error);
+                showAlert(error.message, 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
+            }
+        });
+    }
+
+    // Event listeners para el modal de firmar reserva
+    const firmarReservaModal = document.getElementById('firmarReservaModal');
+    const closeFirmarReservaModalBtn = document.getElementById('closeFirmarReservaModalBtn');
+    const cancelFirmarReservaBtn = document.getElementById('cancelFirmarReservaBtn');
+    const firmarReservaForm = document.getElementById('firmarReservaForm');
+
+    if (closeFirmarReservaModalBtn) {
+        closeFirmarReservaModalBtn.addEventListener('click', () => {
+            if (firmarReservaModal) firmarReservaModal.style.display = 'none';
+        });
+    }
+
+    if (cancelFirmarReservaBtn) {
+        cancelFirmarReservaBtn.addEventListener('click', () => {
+            if (firmarReservaModal) firmarReservaModal.style.display = 'none';
+        });
+    }
+
+    if (firmarReservaForm) {
+        firmarReservaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = firmarReservaForm.querySelector('button[type="submit"]');
+            
+            try {
+                const reservaId = document.getElementById('firmarReservaId').value;
+                const metodoPago = document.getElementById('firmarMetodoPago').value;
+                const monto = document.getElementById('firmarMonto').value;
+                
+                if (!metodoPago || !monto) {
+                    showAlert('Por favor complete todos los campos requeridos', 'warning');
+                    return;
+                }
+                
+                setButtonLoading(submitButton, true);
+                
+                const headers = {
+                    'Content-Type': 'application/json',
+                    'email': user.email,
+                    'password': user.password
+                };
+
+                const response = await fetch(`${API_URL}/reservas/${reservaId}/firmar`, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify({ metodoPago, monto })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al firmar reserva');
+                }
+                
+                const result = await response.json();
+                showAlert(result.message, 'success');
+                if (firmarReservaModal) firmarReservaModal.style.display = 'none';
+                reservasCache = [];
+                contratosCache = [];
+                await loadReservas();
+                await loadContratos();
+                
+            } catch (error) {
+                console.error('Error al firmar reserva:', error);
+                showAlert(error.message, 'error');
+            } finally {
+                setButtonLoading(submitButton, false);
+            }
+        });
+    }
     
     window.addEventListener('click', (e) => {
         if (e.target === prorrogaModal) {
@@ -589,6 +919,15 @@ function setupEventListeners() {
         }
         if (e.target === reservaModal) {
             if (reservaModal) reservaModal.style.display = 'none';
+        }
+        if (e.target === firmaXDiasModal) {
+            if (firmaXDiasModal) firmaXDiasModal.style.display = 'none';
+        }
+        if (e.target === declinarModal) {
+            if (declinarModal) declinarModal.style.display = 'none';
+        }
+        if (e.target === firmarReservaModal) {
+            if (firmarReservaModal) firmarReservaModal.style.display = 'none';
         }
     });
 }
@@ -723,11 +1062,10 @@ async function loadReservas() {
             return;
         }
 
-        const clientes = globalClientes;
+        const clientes = globalprospectos;
         const proyectos = globalProyectos;
         const usuarios = globalUsuarios;
         
-
         // 🔹 Obtener valor del filtro de proyecto
         const filtroProyecto = document.getElementById('filtroReservas')?.value || 'todos';
         if (filtroProyecto !== 'todos') {
@@ -762,17 +1100,20 @@ async function loadReservas() {
                 <td>${formatDate(reserva.fechaReserva)}</td>
                 <td>
                     <span class="badge ${diasRestantes > 3 ? 'badge-success' : 'badge-warning'}">
-                        ${diasRestantes > 0 ? diasRestantes : 'Vencido'}
+                        ${diasRestantes > 0 ? diasRestantes + " días" : 'Vencido'}
                     </span>
                 </td>
                 <td>
-                    <span class="badge ${reserva.firmado == "TRUE" ? 'badge-success' : 'badge-info'}">
-                        ${reserva.firmado == "TRUE" ? 'Firmado' : 'Pendiente'}
+                    <span class="badge ${getBadgeClass2(reserva.estado)}">
+                        ${reserva.estado || 'Activa'}
                     </span>
                 </td>
                 <td class="action-buttons">
                     <div class="btn-container">
-                        ${reserva.firmado != "TRUE" ? `
+                        ${reserva.firmado != "TRUE" && 
+                         reserva.estado !== 'Declinado sin Devolución' && 
+                         reserva.estado !== 'Declinado con Devolución' &&
+                         diasRestantes > 0 ? `
                             <button class="btn btn-sm btn-primary ampliar-btn" data-id="${reserva.id}" data-dias="7">
                                 +7
                             </button>
@@ -781,6 +1122,12 @@ async function loadReservas() {
                             </button>
                             <button class="btn btn-sm btn-success firmar-btn" data-id="${reserva.id}">
                                 <i class="fas fa-file-signature"></i> Firmar
+                            </button>
+                            <button class="btn btn-sm btn-warning firma-x-dias-btn" data-id="${reserva.id}">
+                                <i class="fas fa-clock"></i> Firma X días
+                            </button>
+                            <button class="btn btn-sm btn-danger declinar-btn" data-id="${reserva.id}">
+                                <i class="fas fa-times"></i> Declinar
                             </button>
                         ` : '<span>N/A</span>'}
                     </div>
@@ -797,10 +1144,33 @@ async function loadReservas() {
             btn.addEventListener('click', () => firmarReserva(btn.dataset.id));
         });
         
+        document.querySelectorAll('.firma-x-dias-btn').forEach(btn => {
+            btn.addEventListener('click', () => openFirmaXDiasModal(btn.dataset.id));
+        });
+        
+        document.querySelectorAll('.declinar-btn').forEach(btn => {
+            btn.addEventListener('click', () => openDeclinarModal(btn.dataset.id));
+        });
+        
     } catch (error) {
         console.error('Error al cargar reservas:', error);
         if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar reservas: ${error.message}`, 'error');
+    }
+}
+
+// Función auxiliar para las clases de badge según el estado
+function getBadgeClass2(estado) {
+    switch (estado) {
+        case 'Firmado':
+            return 'badge-success';
+        case 'Activa':
+        case 'Pendiente':
+            return 'badge-info';
+        case 'En espera':
+            return 'badge-danger';
+        default:
+            return 'badge-warning';
     }
 }
 
@@ -845,7 +1215,7 @@ async function loadContratos() {
             return;
         }
 
-        const clientes = globalClientes;
+        const clientes = globalprospectos;
         const proyectos = globalProyectos;
         const usuarios = globalUsuarios;
 
@@ -945,7 +1315,6 @@ async function loadClientesFijos() {
                 <td>${proyecto}</td>
                 <td>${cliente.lote}</td>
                 <td>${cliente.manzano}</td>
-                <td>${cliente.firmaContrato}</td>
                 <td>${formatDate(cliente.fechaPago)}</td>
             `;
             if (tbody) tbody.appendChild(row);
@@ -1009,7 +1378,7 @@ async function openReservaModal(reservaId) {
         };
 
         const proyectos = globalProyectos;        
-        const clientes = globalClientes;
+        const clientes = globalprospectos;
         
         const proyectoSelect = document.getElementById('reservaProyecto');
         if (proyectoSelect) {
@@ -1467,4 +1836,98 @@ function initFiltroRanking() {
     select.addEventListener('change', () => {
         loadRanking();
     });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Función para abrir modal de firma en X días
+function openFirmaXDiasModal(reservaId) {
+    const modal = document.getElementById('firmaXDiasModal');
+    const reservaIdInput = document.getElementById('firmaReservaId');
+    
+    if (reservaIdInput) reservaIdInput.value = reservaId;
+    if (modal) modal.style.display = 'flex';
+}
+
+// Función para abrir modal de declinar
+function openDeclinarModal(reservaId) {
+    const modal = document.getElementById('declinarModal');
+    const reservaIdInput = document.getElementById('declinarReservaId');
+    
+    if (reservaIdInput) reservaIdInput.value = reservaId;
+    if (modal) modal.style.display = 'flex';
+}
+
+// Función para ejecutar firma en X días
+async function ejecutarFirmaXDias(reservaId, dias) {
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'email': user.email,
+            'password': user.password
+        };
+
+        const response = await fetch(`${API_URL}/reservas/${reservaId}/accion`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ 
+                accion: 'firma_en_x_dias', 
+                dias: parseInt(dias)
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al programar firma');
+        }
+        
+        const result = await response.json();
+        showAlert(result.message, 'success');
+        reservasCache = [];
+        await loadReservas();
+    } catch (error) {
+        console.error('Error al programar firma:', error);
+        showAlert(error.message, 'error');
+    }
+}
+
+// Función para ejecutar declinación
+async function ejecutarDeclinacion(reservaId, tipo) {
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'email': user.email,
+            'password': user.password
+        };
+
+        const response = await fetch(`${API_URL}/reservas/${reservaId}/accion`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify({ 
+                accion: tipo, 
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al declinar reserva');
+        }
+        
+        const result = await response.json();
+        showAlert(result.message, 'success');
+        reservasCache = [];
+        await loadReservas();
+    } catch (error) {
+        console.error('Error al declinar reserva:', error);
+        showAlert(error.message, 'error');
+    }
 }

@@ -49,19 +49,63 @@
         <div class="alert" id="alertBox"></div>
         
         <div class="tabs">
-            <button class="tab-btn active" data-tab="clientes">Clientes</button>
+            <button class="tab-btn active" data-tab="prospectos">Prospectos</button>
+            <button class="tab-btn" data-tab="clientesFijos">Clientes</button>
+            <button class="tab-btn" data-tab="prospectosUsuario">Agentes</button>
+            <!-- <button class="tab-btn" data-tab="clientes">Clientes</button> -->
             <button class="tab-btn" data-tab="prorrogas">Solicitudes de Prórroga</button>
             <button class="tab-btn" data-tab="equipos">Equipos</button>
             <button class="tab-btn" data-tab="reservas">Reservas</button>
             <button class="tab-btn" data-tab="contratos">Contratos</button>
-            <button class="tab-btn" data-tab="clientesFijos" style="display: none;">Clientes Fijos</button>
-            <button style="display: none;" class="tab-btn" data-tab="usuarios">Usuarios</button>
+            <!-- <button class="tab-btn" data-tab="usuarios">Usuarios</button> -->
             <button class="tab-btn" data-tab="ranking">Ranking</button>
         </div>
 
+        <!-- Tabla de Prospectos por Usuario -->
+        <div class="tab-content" id="prospectosUsuarioTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Prospectos por Agente (Últimos 30 días)</h2>
+                </div>
+                <div class="table-container">
+                    <table id="prospectosUsuarioTable">
+                        <thead>
+                            <tr>
+                                <th>Agentes</th>
+                                <th>Cantidad de Prospectos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prospectosUsuarioTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Prospectos -->
+        <div class="tab-content active" id="prospectosTab">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Todos los Prospectos</h2>
+                </div>
+                <div class="table-container">
+                    <table id="prospectosTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Celular</th>
+                                <th>Asesor</th>
+                                <th>Registro</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="prospectosTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <!-- Tabla de Clientes -->
-        <div class="tab-content active" id="clientesTab">
+        <div class="tab-content" id="clientesTab">
             <div class="card">
                 <div class="card-header">
                     <h2>Todos los Clientes</h2>
@@ -159,7 +203,7 @@
                                 <th>Cliente</th>
                                 <th>Monto</th>
                                 <th>Fecha Reserva</th>
-                                <th>Días Restantes</th>
+                                <th>Plazo</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
@@ -207,7 +251,7 @@
         <div class="tab-content" id="clientesFijosTab">
             <div class="card">
                 <div class="card-header">
-                    <h2>Clientes fijos</h2>
+                    <h2>Clientes</h2>
                 </div>
                 <div class="filtro-proyectos" style="margin-bottom: 15px;">
                         <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
@@ -225,7 +269,6 @@
                                 <th>Proyecto</th>
                                 <th>Lote</th>
                                 <th>Manzano</th>
-                                <th>Firma de Contrato</th>
                                 <th>Fecha de Pago</th>
                             </tr>
                         </thead>
@@ -442,10 +485,6 @@
                     <label for="diasExtra">Días extra a conceder:</label>
                     <input type="number" id="diasExtra" class="form-control" min="1" value="7">
                 </div>
-                <div class="form-group">
-                    <label for="comentario">Comentario (opcional):</label>
-                    <textarea id="comentario" class="form-control" rows="3"></textarea>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn" id="cancelProrrogaBtn">Cancelar</button>
@@ -525,6 +564,55 @@
                 <div class="modal-footer">
                     <button type="button" class="btn" id="cancelUserBtn">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Firma en X días -->
+    <div class="modal" id="firmaXDiasModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Programar Firma</h3>
+                <button class="close-btn" id="closeFirmaXDiasModalBtn">&times;</button>
+            </div>
+            <form id="firmaXDiasForm">
+                <input type="hidden" id="firmaReservaId">
+                <div class="form-group">
+                    <label for="diasFirma">Días adicionales para firma</label>
+                    <input type="number" id="diasFirma" class="form-control" required min="1" placeholder="Ingrese cantidad de días">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelFirmaXDiasBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-warning">Programar Firma</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para Declinar Reserva -->
+    <div class="modal" id="declinarModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Declinar Reserva</h3>
+                <button class="close-btn" id="closeDeclinarModalBtn">&times;</button>
+            </div>
+            <form id="declinarForm">
+                <input type="hidden" id="declinarReservaId">
+                <div class="form-group">
+                    <label>Tipo de declinación</label>
+                    <div>
+                        <input type="radio" id="declinacionSinDevolucion" name="tipoDeclinacion" value="declinado_sin_devolucion" required>
+                        <label for="declinacionSinDevolucion">Declinado sin Devolución</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="declinacionConDevolucion" name="tipoDeclinacion" value="declinado_con_devolucion" required>
+                        <label for="declinacionConDevolucion">Declinado con Devolución</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" id="cancelDeclinarBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Declinación</button>
                 </div>
             </form>
         </div>

@@ -170,3 +170,39 @@
     background-color: #17a2b8 !important;
     color: white !important;
 }
+
+
+
+
+
+
+
+
+
+.btn-container {
+    display: flex;
+    gap: 5px; /* Espacio entre botones */
+    flex-wrap: wrap;
+}
+
+/* Versión minimalista */
+#declinarModal .form-group > div {
+    margin: 8px 0;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+}
+
+#declinarModal .form-group > div:hover {
+    border-color: #007bff;
+}
+
+#declinarModal input[type="radio"]:checked + label {
+    color: #28a745;
+}
+
+#declinarModal .form-group > div:has(input[type="radio"]:checked) {
+    border-color: #28a745;
+    background: #f8fff9;
+}

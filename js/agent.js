@@ -1,10 +1,11 @@
 let user = JSON.parse(sessionStorage.getItem('user'));
 let urbanizacionesCache = [];
-let clientesCache = [];
-let globalClientes = [];
+let prospectosCache = [];
+let globalProspectos = [];
 let prorrogasCache = [];
 let proyectosCache = [];
 let reservasCache = [];
+let clientesCache = [];
 
 const $ = (id) => document.getElementById(id);
 const qs = (sel) => document.querySelector(sel);
@@ -113,11 +114,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         await Promise.all([
             await loadUrbanizaciones(),
-            await loadClientes(),
-            await loadGlobalClientes(),
+            await loadProspectos(),
+            await loadGlobalProspectos(),
             await loadProrrogas(),
             await loadProyectos(),
             await loadReservas(),
+            await loadClientesFijos(),
         ]);
 
         initFiltroReservas();
@@ -161,30 +163,12 @@ async function loadUrbanizaciones() {
     }
 }
 
-async function loadGlobalClientes() {
-    const headers = {
-        'Content-Type': 'application/json',
-        'email': "acastilla466@gmail.com",
-        'password': "Vilu101110"
-    };
-
-    const response = await fetch(`${API_URL}/clientes`, { headers });
-    if (!response.ok) throw new Error('Error al cargar clientes globales');
-    globalClientes = await response.json();
-}
-
-async function loadClientes() {
-    try {
-        const data = await fetchJson(`${API_URL}/clientes`, { headers: getAuthHeaders() }, 'Error al cargar clientes');
-        clientesCache = Array.isArray(data) ? data : [];
-        renderClientes();
-        return clientesCache;
-    } catch (error) {
-        console.error('Error al cargar clientes:', error);
-        showAlert('Error al cargar los clientes', 'error');
-        clientesCache = [];
-        return [];
-    }
+async function loadGlobalProspectos() { 
+    const headers = { 'Content-Type': 'application/json', 'email': "acastilla466@gmail.com", 'password': "Vilu101110" }; 
+    const response = await fetch(`${API_URL}/prospectos`, { headers }); 
+    
+    if (!response.ok) throw new Error('Error al cargar clientes globales'); 
+    globalProspectos = await response.json(); 
 }
 
 async function loadProyectos() {
@@ -239,7 +223,7 @@ async function loadReservas() {
             return;
         }
         
-        const clientes = globalClientes;
+        const clientes = globalProspectos;
         const proyectos = proyectosCache;
 
         // 🔹 Obtener valor del filtro de proyecto
@@ -269,7 +253,7 @@ async function loadReservas() {
                 <td>${formatDate(reserva.fechaReserva)}</td>
                 <td>
                     <span class="badge ${diasRestantes > 3 ? 'badge-success' : 'badge-warning'}">
-                        ${diasRestantes > 0 ? diasRestantes : 'Vencido'}
+                        ${diasRestantes > 0 ? diasRestantes + " días" : 'Vencido'}
                     </span>
                 </td>
                 <td>
@@ -285,52 +269,6 @@ async function loadReservas() {
         if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar reservas: ${error.message}`, 'error');
     }
-}
-
-function renderClientes() {
-    const tbody = $('clientsTableBody');
-    if (!tbody) {
-        console.warn('No se encontró #clientsTableBody');
-        return;
-    }
-    tbody.innerHTML = '';
-
-    clientesCache.forEach(cliente => {
-        const urbanizacion = urbanizacionesCache.find(u => u.id === cliente.proyectoId)?.nombre || 'N/A';
-        const diasRestantes = calcularDiasRestantes(cliente.fecha);
-        const esCritico = diasRestantes <= 5 && diasRestantes >= 0;
-        const estaExpirado = diasRestantes < 0;
-
-        const fechaISO = cliente.fecha ? new Date(cliente.fecha).toISOString().split('T')[0] : '';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${cliente.nombre} ${cliente.apellido}</td>
-            <td>${cliente.celular}</td>
-            <td>${urbanizacion}</td>
-            <td>${cliente.lote || ''}</td>
-            <td>${cliente.manzano || ''}</td>
-            <td>${formatDate(cliente.fecha)}</td>
-            <td class="dias-restantes ${esCritico ? 'critico' : ''} ${estaExpirado ? 'expirado' : ''}">
-                ${estaExpirado ? 'Expirado' : `${diasRestantes} días`}
-            </td>
-            <td class="actions">
-                <button class="btn btn-sm btn-primary edit-btn" data-id="${cliente.id}">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                ${esCritico ? `
-                <button class="btn btn-sm btn-warning solicitar-btn" 
-                        data-id="${cliente.id}" 
-                        data-fecha="${fechaISO}">
-                    <i class="fas fa-clock"></i> Prórroga
-                </button>
-                ` : (estaExpirado ? 'N/A' : '')}
-            </td>
-        `;
-        tbody.appendChild(row);
-    });
-
-    setupTableButtons();
 }
 
 function setupTableButtons() {
@@ -376,7 +314,7 @@ function renderProrrogas() {
     tbody.innerHTML = '';
 
     prorrogasCache.forEach(prorroga => {
-        const cliente = clientesCache.find(c => c.id === prorroga.clienteId);
+        const cliente = prospectosCache.find(c => c.id === prorroga.clienteId);
         const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : 'N/A';
 
         const row = document.createElement('tr');
@@ -402,10 +340,10 @@ function openEditModal(clienteId) {
     const modal = $('editClientModal');
     if (modal) modal.style.display = 'flex';
 
-    const cliente = clientesCache.find(c => c.id == clienteId);
+    const cliente = prospectosCache.find(c => c.id == clienteId);
 
     if (!cliente) {
-        showAlert('Cliente no encontrado', 'error');
+        showAlert('Prospecto no encontrado', 'error');
         if (modal) modal.style.display = 'none';
         return;
     }
@@ -414,20 +352,6 @@ function openEditModal(clienteId) {
     $('editNombre').value = cliente.nombre || '';
     $('editApellido').value = cliente.apellido || '';
     $('editCelular').value = cliente.celular || '';
-    $('editLote').value = cliente.lote || '';
-    $('editManzano').value = cliente.manzano || '';
-
-    const urbanizacionSelect = $('editUrbanizacion');
-    if (urbanizacionSelect) {
-        urbanizacionSelect.innerHTML = '<option value="">Seleccione una urbanización</option>';
-        urbanizacionesCache.forEach(urbanizacion => {
-            const option = document.createElement('option');
-            option.value = urbanizacion.id;
-            option.textContent = urbanizacion.nombre;
-            option.selected = (urbanizacion.id == cliente.proyectoId);
-            urbanizacionSelect.appendChild(option);
-        });
-    }
 }
 
 async function saveEditedClient(e) {
@@ -438,48 +362,39 @@ async function saveEditedClient(e) {
     const nombre = $('editNombre').value;
     const apellido = $('editApellido').value;
     const celular = $('editCelular').value;
-    const urbanizacion = $('editUrbanizacion').value;
-    const lote = $('editLote').value;
-    const manzano = $('editManzano').value;
 
     try {
         const body = {
             nombre,
             apellido,
             celular,
-            proyectoId: urbanizacion,
-            lote,
-            manzano,
             agenteId: user.id
         };
 
-        const result = await fetchJson(`${API_URL}/clientes/${clienteId}`, {
+        const result = await fetchJson(`${API_URL}/prospectos/${clienteId}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
             body: JSON.stringify(body)
-        }, 'Error al actualizar cliente', submitButton);
+        }, 'Error al actualizar prospecto', submitButton);
 
-        showAlert(result?.message || 'Cliente actualizado correctamente', 'success');
+        showAlert(result?.message || 'Prospecto actualizado correctamente', 'success');
         const editModal = $('editClientModal');
         if (editModal) editModal.style.display = 'none';
 
-        const old = clientesCache.find(c => c.id == clienteId) || {};
+        const old = prospectosCache.find(c => c.id == clienteId) || {};
         const updatedCliente = {
             id: clienteId,
             nombre,
             apellido,
             celular,
-            proyectoId: urbanizacion,
             agenteId: user.id,
             fecha: old.fecha || new Date().toISOString().split('T')[0],
-            lote,
-            manzano
         };
 
-        clientesCache = clientesCache.map(c => (c.id == clienteId ? updatedCliente : c));
-        renderClientes();
+        prospectosCache = prospectosCache.map(c => (c.id == clienteId ? updatedCliente : c));
+        renderProspectos();
     } catch (error) {
-        console.error('Error al actualizar cliente:', error);
+        console.error('Error al actualizar prospecto:', error);
         showAlert(error.message, 'error');
     }
 }
@@ -510,7 +425,7 @@ function setupEventListeners() {
         });
     });
 
-    const addClientBtn = $('addClientBtn');
+    const addClientBtn = $('addProspectoBtn');
     const closeClientModalBtn = $('closeClientModalBtn');
     const cancelClientBtn = $('cancelClientBtn');
     const clientForm = $('clientForm');
@@ -547,19 +462,16 @@ function setupEventListeners() {
                 const nombre = $('nombre').value;
                 const apellido = $('apellido').value;
                 const celular = $('celular').value;
-                const urbanizacion = $('urbanizacion').value;
-                const lote = $('lote').value;
-                const manzano = $('manzano').value;
 
-                const body = { nombre, apellido, celular, proyectoId: urbanizacion, lote, manzano };
+                const body = { nombre, apellido, celular};
 
-                const result = await fetchJson(`${API_URL}/clientes`, {
+                const result = await fetchJson(`${API_URL}/prospectos`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(body)
-                }, 'Error al registrar cliente', submitButton);
+                }, 'Error al registrar prospecto', submitButton);
 
-                showAlert(result?.message || 'Cliente registrado correctamente', 'success');
+                showAlert(result?.message || 'Prospecto registrado correctamente', 'success');
                 const modal = $('clientModal');
                 if (modal) modal.style.display = 'none';
                 clientForm.reset();
@@ -570,17 +482,14 @@ function setupEventListeners() {
                     nombre,
                     apellido,
                     celular,
-                    proyectoId: urbanizacion,
                     agenteId: user.id,
                     fecha: new Date().toISOString().split('T')[0],
-                    lote,
-                    manzano
                 };
 
-                clientesCache.push(newCliente);
-                renderClientes();
+                prospectosCache.push(newCliente);
+                renderProspectos();
             } catch (error) {
-                console.error('Error al registrar cliente:', error);
+                console.error('Error al registrar prospecto:', error);
                 showAlert(error.message, 'error');
             }
         });
@@ -755,6 +664,30 @@ function setupEventListeners() {
         });
     }
 
+    // Configurar evento para el botón de nuevo cliente fijo
+    const addClientFBtn = document.getElementById('addClientFBtn');
+    if (addClientFBtn) {
+        addClientFBtn.addEventListener('click', openClientFijoModal);
+    }
+
+    // Configurar eventos para cerrar el modal de cliente fijo
+    const closeClientFModalBtn = document.getElementById('closeClientFModalBtn');
+    if (closeClientFModalBtn) {
+        closeClientFModalBtn.addEventListener('click', closeClientFijoModal);
+    }
+
+    const cancelClientFBtn = document.getElementById('cancelClientFBtn');
+    if (cancelClientFBtn) {
+        cancelClientFBtn.addEventListener('click', closeClientFijoModal);
+    }
+
+    // Configurar envío del formulario de cliente fijo
+    const clientFijoForm = document.getElementById('clientFijoForm');
+    if (clientFijoForm) {
+        clientFijoForm.addEventListener('submit', handleClientFijoSubmit);
+    }
+
+
     window.addEventListener('click', (e) => {
         if (e.target === $('clientModal')) {
             if ($('clientModal')) $('clientModal').style.display = 'none';
@@ -767,6 +700,9 @@ function setupEventListeners() {
         }
         if (e.target === reservaModal) {
             if (reservaModal) reservaModal.style.display = 'none';
+        }
+        if (e.target === document.getElementById('clientFijoModal')) {
+            closeClientFijoModal();
         }
     });
 }
@@ -785,7 +721,7 @@ async function openReservaModal(reservaId) {
         };
 
         const proyectos = proyectosCache;        
-        const clientes = clientesCache;
+        const clientes = prospectosCache;
         
         const proyectoSelect = document.getElementById('reservaProyecto');
         if (proyectoSelect) {
@@ -802,12 +738,22 @@ async function openReservaModal(reservaId) {
         const clienteSelect = document.getElementById('reservaCliente');
         if (clienteSelect) {
             clienteSelect.innerHTML = '<option value="">Seleccionar cliente</option>';
-            clientes.forEach(cliente => {
-                const option = document.createElement('option');
-                option.value = cliente.id;
-                option.textContent = `${cliente.nombre} ${cliente.apellido}`;
-                clienteSelect.appendChild(option);
-            });
+            const hoy = new Date();
+
+            clientes
+                .filter(cliente => {
+                    if (!cliente.fecha) return false; // si no tiene fecha, no mostrar
+                    const fechaCliente = new Date(cliente.fecha);
+                    const diffMs = hoy - fechaCliente; // diferencia en milisegundos
+                    const diffDias = diffMs / (1000 * 60 * 60 * 24); // convertir a días
+                    return diffDias <= 30; // solo mostrar si tiene 30 días o menos
+                })
+                .forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = cliente.id;
+                    option.textContent = `${cliente.nombre} ${cliente.apellido}`;
+                    clienteSelect.appendChild(option);
+                });
         }
 
         const closeReservaModalBtn = document.getElementById('closeReservaModalBtn');
@@ -972,5 +918,256 @@ function setButtonLoading(button, isLoading, loadingText = 'Procesando...') {
             button.innerHTML = button.dataset.originalText;
         }
         button.disabled = false;
+    }
+}
+
+
+async function loadClientesFijos() {
+    const tbody = document.getElementById('clientesFijosTableBody');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">Cargando clientes...</td></tr>';
+    
+    try {
+        let clientesF = [];
+        if (clientesCache.length === 0) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'email': user.email,
+                'password': user.password
+            };
+
+            const clientesFResponse = await fetch(`${API_URL}/clientes-fijos`, { headers });
+            
+            if (!clientesFResponse.ok) {
+                if (clientesFResponse.status === 404) {
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registrados</td></tr>';
+                    return;
+                }
+                
+                const errorData = await clientesFResponse.json().catch(() => ({}));
+                throw new Error(errorData.error || `Error ${clientesFResponse.status} al cargar clientes`);
+            }
+            
+            clientesF = await clientesFResponse.json();
+            clientesCache = clientesF;
+        } else {
+            clientesF = clientesCache;
+        }
+
+        if (tbody) tbody.innerHTML = '';
+        
+        if (!clientesF || clientesF.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registrados</td></tr>';
+            return;
+        }
+
+        // 🔹 Agrupamos por teléfono
+        const clientesAgrupados = {};
+        clientesF.forEach(cliente => {
+            if (!clientesAgrupados[cliente.telefono]) {
+                clientesAgrupados[cliente.telefono] = { 
+                    ...cliente, 
+                    firmas: 1 
+                };
+            } else {
+                clientesAgrupados[cliente.telefono].firmas += 1;
+            }
+        });
+
+        // 🔹 Convertimos a array
+        const clientesUnicos = Object.values(clientesAgrupados);
+
+        // 🔹 Mostrar en tabla
+        clientesUnicos.forEach(cliente => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${cliente.nombre}</td>
+                <td>${cliente.apellido}</td>
+                <td>${cliente.telefono}</td>
+                <td>${cliente.firmas}</td>
+            `;
+            if (tbody) tbody.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error('Error al cargar clientes:', error);
+        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
+        showAlert(`Error al cargar clientes: ${error.message}`, 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Cargar prospectos y guardarlos en cache
+async function loadProspectos() {
+    try {
+        const data = await fetchJson(`${API_URL}/prospectos`, { headers: getAuthHeaders() }, 'Error al cargar prospectos');
+        prospectosCache = Array.isArray(data) ? data : [];
+        renderProspectos();
+
+        return prospectosCache;
+    } catch (error) {
+        console.error('Error al cargar prospectos:', error);
+        showAlert('Error al cargar los prospectos', 'error');
+        prospectosCache = [];
+        return [];
+    }
+}
+
+// Renderizar tabla de prospectos
+function renderProspectos() {
+    const tbody = $('prospectosTableBody');
+    if (!tbody) {
+        console.warn('No se encontró #prospectosTableBody');
+        return;
+    }
+    tbody.innerHTML = '';
+
+    prospectosCache.forEach(prospecto => {
+        const fechaISO = prospecto.fecha ? new Date(prospecto.fecha).toISOString().split('T')[0] : '';
+        const diasRestantes = calcularDiasRestantes(prospecto.fecha); 
+        const esCritico = diasRestantes <= 5 && diasRestantes >= 0; 
+        const estaExpirado = diasRestantes < 0;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${prospecto.nombre + " " + prospecto.apellido || ''}</td>
+            <td>${prospecto.celular || ''}</td>
+            <td>${formatDate(prospecto.fecha)}</td>
+            <td class="dias-restantes ${esCritico ? 'critico' : ''} ${estaExpirado ? 'expirado' : ''}">
+                ${estaExpirado ? 'Expirado' : `${diasRestantes} días`}
+            </td>
+            <td class="actions">
+                ${estaExpirado ? 'N/A' : `
+                    <button class="btn btn-sm btn-primary edit-btn" data-id="${prospecto.id}">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                    ${esCritico ? `
+                        <button class="btn btn-sm btn-warning solicitar-btn" 
+                                data-id="${prospecto.id}" 
+                                data-fecha="${fechaISO}">
+                            <i class="fas fa-clock"></i> Prórroga
+                        </button>
+                    ` : ''}
+                `}
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    setupTableButtons();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Función para abrir el modal de cliente fijo
+function openClientFijoModal() {
+    const modal = document.getElementById('clientFijoModal');
+    if (!modal) return;
+    
+    // Llenar el select de proyectos
+    const proyectoSelect = document.getElementById('cfProyecto');
+    if (proyectoSelect && proyectosCache.length > 0) {
+        proyectoSelect.innerHTML = '<option value="">Seleccionar proyecto</option>';
+        proyectosCache.forEach(proyecto => {
+            const option = document.createElement('option');
+            option.value = proyecto.id;
+            option.textContent = proyecto.nombre;
+            proyectoSelect.appendChild(option);
+        });
+    }
+    
+    // Establecer fecha actual como valor por defecto
+    const fechaPagoInput = document.getElementById('cfFechaPago');
+    if (fechaPagoInput) {
+        const today = new Date();
+        fechaPagoInput.value = today.toISOString().split('T')[0];
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// Función para cerrar el modal de cliente fijo
+function closeClientFijoModal() {
+    const modal = document.getElementById('clientFijoModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// Función para enviar el formulario de cliente fijo
+async function handleClientFijoSubmit(e) {
+    e.preventDefault();
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    
+    try {
+        const nombre = document.getElementById('cfNombre').value;
+        const apellido = document.getElementById('cfApellido').value;
+        const celular = document.getElementById('cfCelular').value;
+        const proyectoId = document.getElementById('cfProyecto').value;
+        const lote = document.getElementById('cfLote').value;
+        const manzano = document.getElementById('cfManzano').value;
+        const fechaPago = document.getElementById('cfFechaPago').value;
+
+        // Validar que todos los campos estén completos
+        if (!nombre || !apellido || !celular || !proyectoId || !lote || !manzano || !fechaPago) {
+            showAlert('Por favor complete todos los campos', 'error');
+            return;
+        }
+
+        const body = { 
+            nombre, 
+            apellido, 
+            celular, 
+            proyectoId, 
+            lote, 
+            manzano, 
+            fechaPago 
+        };
+
+        const result = await fetchJson(`${API_URL}/clientes-fijos`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(body)
+        }, 'Error al registrar cliente fijo', submitButton);
+
+        showAlert(result?.message || 'Cliente registrado exitosamente', 'success');
+        
+        // Cerrar modal y resetear formulario
+        closeClientFijoModal();
+        document.getElementById('clientFijoForm').reset();
+        
+        // Actualizar la tabla de clientes fijos
+        clientesCache = []; // Forzar recarga
+        await loadClientesFijos();
+        
+    } catch (error) {
+        console.error('Error al registrar cliente fijo:', error);
+        showAlert(error.message, 'error');
     }
 }
