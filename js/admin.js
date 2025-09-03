@@ -838,74 +838,7 @@ function setupEventListeners() {
         });
     }
 
-    // Event listeners para el modal de firmar reserva
-    const firmarReservaModal = document.getElementById('firmarReservaModal');
-    const closeFirmarReservaModalBtn = document.getElementById('closeFirmarReservaModalBtn');
-    const cancelFirmarReservaBtn = document.getElementById('cancelFirmarReservaBtn');
-    const firmarReservaForm = document.getElementById('firmarReservaForm');
-
-    if (closeFirmarReservaModalBtn) {
-        closeFirmarReservaModalBtn.addEventListener('click', () => {
-            if (firmarReservaModal) firmarReservaModal.style.display = 'none';
-        });
-    }
-
-    if (cancelFirmarReservaBtn) {
-        cancelFirmarReservaBtn.addEventListener('click', () => {
-            if (firmarReservaModal) firmarReservaModal.style.display = 'none';
-        });
-    }
-
-    if (firmarReservaForm) {
-        firmarReservaForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const submitButton = firmarReservaForm.querySelector('button[type="submit"]');
-            
-            try {
-                const reservaId = document.getElementById('firmarReservaId').value;
-                const metodoPago = document.getElementById('firmarMetodoPago').value;
-                const monto = document.getElementById('firmarMonto').value;
-                
-                if (!metodoPago || !monto) {
-                    showAlert('Por favor complete todos los campos requeridos', 'warning');
-                    return;
-                }
-                
-                setButtonLoading(submitButton, true);
-                
-                const headers = {
-                    'Content-Type': 'application/json',
-                    'email': user.email,
-                    'password': user.password
-                };
-
-                const response = await fetch(`${API_URL}/reservas/${reservaId}/firmar`, {
-                    method: 'PUT',
-                    headers,
-                    body: JSON.stringify({ metodoPago, monto })
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Error al firmar reserva');
-                }
-                
-                const result = await response.json();
-                showAlert(result.message, 'success');
-                if (firmarReservaModal) firmarReservaModal.style.display = 'none';
-                reservasCache = [];
-                contratosCache = [];
-                await loadReservas();
-                await loadContratos();
-                
-            } catch (error) {
-                console.error('Error al firmar reserva:', error);
-                showAlert(error.message, 'error');
-            } finally {
-                setButtonLoading(submitButton, false);
-            }
-        });
-    }
+    
     
     window.addEventListener('click', (e) => {
         if (e.target === prorrogaModal) {
@@ -1479,14 +1412,30 @@ async function ampliarReserva(reservaId, dias) {
 function openFirmarReservaModal(reservaId) {
     const modal = document.getElementById('firmarReservaModal');
     const reservaIdInput = document.getElementById('firmarReservaId');
-    
+    const submitButton = document.querySelector('#firmarReservaForm button[type="submit"]');
+
     if (reservaIdInput) reservaIdInput.value = reservaId;
     if (modal) modal.style.display = 'flex';
+
+    // Resetear el botón al abrir modal
+    if (submitButton) {
+        submitButton.disabled = false;
+        if (submitButton.dataset.originalText) {
+            submitButton.innerHTML = submitButton.dataset.originalText;
+        } else {
+            submitButton.innerHTML = 'Firmar';
+        }
+    }
 }
 
+
 async function firmarReserva(reservaId) {
+    const tableButton = document.querySelector(`.firmar-btn[data-id="${reservaId}"]`);
+    if (tableButton) tableButton.disabled = true;  // bloquea click rápido en tabla
+
     openFirmarReservaModal(reservaId);
 }
+
 
 
 function showAlert(message, type = 'success', position = 'top-end') {
