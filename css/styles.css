@@ -1039,3 +1039,31 @@ tr:hover {
     border-color: #007bff;
     outline: none;
 }
+
+
+.filtro-proyectos2 {
+    display: flex;
+    justify-content: flex-end; /* Alinea a la derecha */
+    align-items: center;
+    gap: 10px; /* Espaciado entre label y select */
+    margin-bottom: 15px;
+}
+
+.filtro-proyectos2 label {
+    font-weight: bold;
+    margin: 0;
+}
+
+.filtro-proyectos2 select {
+    min-width: 180px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    transition: border-color 0.3s;
+}
+
+.filtro-proyectos2 select:focus {
+    border-color: #007bff;
+    outline: none;
+}

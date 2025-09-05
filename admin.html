@@ -220,12 +220,22 @@
                 <div class="card-header">
                     <h2>Contratos</h2>
                 </div>
-                <div class="filtro-proyectos" style="margin-bottom: 15px;">
-                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
+                <div class="filtro-container" style="margin-bottom: 15px; display: flex; gap: 20px; align-items: center;">
+                    <div class="filtro-proyectos">
+                        <label for="filtroContratos"><strong>Filtrar por Proyecto:</strong></label>
                         <select id="filtroContratos" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
                             <option value="todos">Todos</option>
                         </select>
                     </div>
+                    <div class="filtro-proyectos">
+                        <label for="filtroTipoContratos"><strong>Filtrar por Tipo:</strong></label>
+                        <select id="filtroTipoContratos" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                            <option value="todos">Todos</option>
+                            <option value="Terreno">Terrenos</option>
+                            <option value="Muralla">Murallas</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table id="contratosTable">
                         <thead>
@@ -239,6 +249,7 @@
                                 <th>Metodo Pago</th>
                                 <th>Monto</th>
                                 <th>Proyecto</th>
+                                <th>Tipo</th>
                             </tr>
                         </thead>
                         <tbody id="contratosTableBody"></tbody>
@@ -254,11 +265,11 @@
                     <h2>Clientes</h2>
                 </div>
                 <div class="filtro-proyectos" style="margin-bottom: 15px;">
-                        <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
-                        <select id="filtroClientesF" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
-                            <option value="todos">Todos</option>
-                        </select>
-                    </div>
+                    <label for="filtroClientesF"><strong>Filtrar por Proyecto:</strong></label>
+                    <select id="filtroClientesF" class="form-select" style="display:inline-block; width:auto; margin-left:10px;">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
                 <div class="table-container">
                     <table id="clientesFijosTable">
                         <thead>
@@ -266,14 +277,73 @@
                                 <th>Nombre</th>
                                 <th>Apellido</th>
                                 <th>Telefono</th>
-                                <th>Proyecto</th>
-                                <th>Lote</th>
-                                <th>Manzano</th>
-                                <th>Fecha de Pago</th>
+                                <th>Firmas</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="clientesFijosTableBody"></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para ver detalles del cliente -->
+        <div id="clienteDetallesModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Detalles del Cliente</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="cliente-info">
+                        <h4 id="clienteNombreCompleto"></h4>
+                        <p id="clienteTelefono"></p>
+                    </div>
+                    <div class="table-container">
+                        <table id="detallesClienteTable">
+                            <thead>
+                                <tr>
+                                    <th>Proyecto</th>
+                                    <th>Manzano</th>
+                                    <th>Lote</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detallesClienteTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para datos de pago de muralla -->
+        <div id="pagoMurallaModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Datos de Pago para Muralla</h3>
+                    <span class="close-pago">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <form id="pagoMurallaForm">
+                        <input type="hidden" id="contratoIdMuralla">
+                        <div class="form-group">
+                            <label for="metodoPagoMuralla">Método de Pago:</label>
+                            <select id="metodoPagoMuralla" class="form-select" required>
+                                <option value="">Seleccionar método</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia">Transferencia</option>
+                                <option value="Depósito">Depósito</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="montoMuralla">Monto:</label>
+                            <input type="number" id="montoMuralla" class="form-control" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Crear Muralla</button>
+                            <button type="button" class="btn btn-secondary" onclick="cerrarModalPago()">Cancelar</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
@@ -295,7 +365,6 @@
                                 <th>Email</th>
                                 <th>Rol</th>
                                 <th>Celular</th>
-                                <th>Fecha Creación</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>

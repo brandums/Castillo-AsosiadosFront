@@ -1109,7 +1109,7 @@ function getBadgeClass2(estado) {
 
 async function loadContratos() {
     const tbody = document.getElementById('contratosTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando contratos...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">Cargando contratos...</td></tr>';
     
     try {
         let contratos = [];
@@ -1126,7 +1126,7 @@ async function loadContratos() {
             
             if (!contratosResponse.ok) {
                 if (contratosResponse.status === 404) {
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay contratos registrados</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay contratos registrados</td></tr>';
                     return;
                 }
                 
@@ -1144,7 +1144,7 @@ async function loadContratos() {
         if (tbody) tbody.innerHTML = '';
         
         if (!contratos || contratos.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay contratos registradas</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay contratos registradas</td></tr>';
             return;
         }
 
@@ -1152,21 +1152,36 @@ async function loadContratos() {
         const proyectos = globalProyectos;
         const usuarios = globalUsuarios;
 
+        // Obtener valores de los filtros
         const filtroProyecto = document.getElementById('filtroContratos')?.value || 'todos';
+        const filtroTipo = document.getElementById('filtroTipoContratos')?.value || 'todos';
+
+        // Aplicar filtros
+        let contratosFiltrados = contratos;
+
         if (filtroProyecto !== 'todos') {
-            contratos = contratos.filter(c => String(c.proyectoId) === String(filtroProyecto));
+            contratosFiltrados = contratosFiltrados.filter(c => String(c.proyectoId) === String(filtroProyecto));
         }
 
-        contratos.forEach(contrato => {
+        if (filtroTipo !== 'todos') {
+            contratosFiltrados = contratosFiltrados.filter(c => c.tipo === filtroTipo);
+        }
+
+        if (contratosFiltrados.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay contratos que coincidan con los filtros</td></tr>';
+            return;
+        }
+
+        contratosFiltrados.forEach(contrato => {
             const proyecto = proyectos.find(p => p.id === contrato.proyectoId)?.nombre || 'N/A';
             const cliente = clientes.find(c => c.id === contrato.clienteId);
             const asesor = usuarios.find(u => u.id === contrato.asesorId);
             let equipoNombre = 'N/A'
             
-            if(contrato.equipoId != "0")
+            if(contrato.equipoId != "0" && contrato.equipoId != 0)
             {
                 const equipo = globalEquipos.find( c => c.id == contrato.equipoId);
-                equipoNombre = equipo.nombre;
+                equipoNombre = equipo ? equipo.nombre : 'N/A';
             }
             
             const row = document.createElement('tr');
@@ -1174,26 +1189,37 @@ async function loadContratos() {
                 <td>${contrato.manzano}</td>
                 <td>${contrato.nroTerreno}</td>
                 <td>${formatDate(contrato.fechaFirma)}</td>
-                <td>${asesor.nombre}</td>
-                <td>${cliente.nombre + " " + cliente.apellido}</td>
+                <td>${asesor ? asesor.nombre : 'N/A'}</td>
+                <td>${cliente ? cliente.nombre + " " + cliente.apellido : 'N/A'}</td>
                 <td>${equipoNombre}</td>
                 <td>${contrato.metodoPago}</td>
                 <td>${contrato.monto}</td>
                 <td>${proyecto}</td>
+                <td class="${contrato.tipo === 'Muralla' ? 'contrato-muralla' : 'contrato-terreno'}">${contrato.tipo || 'N/A'}</td>
             `;
             if (tbody) tbody.appendChild(row);
         });
         
     } catch (error) {
         console.error('Error al cargar contratos:', error);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center error">${error.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar contratos: ${error.message}`, 'error');
     }
 }
 
+// Agregar en tu código de inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener para el filtro de tipo
+    const filtroTipoContratos = document.getElementById('filtroTipoContratos');
+    
+    if (filtroTipoContratos) {
+        filtroTipoContratos.addEventListener('change', loadContratos);
+    }
+});
+
 async function loadClientesFijos() {
     const tbody = document.getElementById('clientesFijosTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">Cargando clientes...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">Cargando clientes...</td></tr>';
     
     try {
         let clientesF = [];
@@ -1208,7 +1234,7 @@ async function loadClientesFijos() {
             
             if (!clientesFResponse.ok) {
                 if (clientesFResponse.status === 404) {
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registrados</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay clientes registrados</td></tr>';
                     return;
                 }
                 
@@ -1226,7 +1252,7 @@ async function loadClientesFijos() {
         if (tbody) tbody.innerHTML = '';
         
         if (!clientesF || clientesF.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registradas</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay clientes registradas</td></tr>';
             return;
         }
 
@@ -1237,28 +1263,148 @@ async function loadClientesFijos() {
             clientesF = clientesF.filter(c => String(c.proyectoId) === String(filtroProyecto));
         }
 
+        // Agrupar clientes por nombre, apellido y teléfono
+        const clientesAgrupados = {};
+        
         clientesF.forEach(cliente => {
-            const proyecto = proyectos.find(p => p.id === cliente.proyectoId)?.nombre || 'N/A';
+            const clave = `${cliente.nombre}-${cliente.apellido}-${cliente.telefono}`;
+            
+            if (!clientesAgrupados[clave]) {
+                clientesAgrupados[clave] = {
+                    nombre: cliente.nombre,
+                    apellido: cliente.apellido,
+                    telefono: cliente.telefono,
+                    contratos: []
+                };
+            }
+            
+            clientesAgrupados[clave].contratos.push(cliente);
+        });
 
+        // Convertir el objeto a array
+        const clientesUnicos = Object.values(clientesAgrupados);
+
+        if (clientesUnicos.length === 0) {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay clientes que coincidan con los filtros</td></tr>';
+            return;
+        }
+
+        clientesUnicos.forEach(cliente => {
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${cliente.nombre}</td>
                 <td>${cliente.apellido}</td>
                 <td>${cliente.telefono}</td>
-                <td>${proyecto}</td>
-                <td>${cliente.lote}</td>
-                <td>${cliente.manzano}</td>
-                <td>${formatDate(cliente.fechaPago)}</td>
+                <td class="text-center"><span class="badge">${cliente.contratos.length}</span></td>
+                <td class="text-center">
+                    <button class="btn-observar" onclick="mostrarDetallesCliente(${JSON.stringify(cliente).replace(/"/g, '&quot;')})">
+                        Detalles
+                    </button>
+                </td>
             `;
             if (tbody) tbody.appendChild(row);
         });
         
     } catch (error) {
         console.error('Error al cargar clientes:', error);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar clientes: ${error.message}`, 'error');
     }
 }
+
+// Función para mostrar detalles del cliente
+function mostrarDetallesCliente(clienteData) {
+    const modal = document.getElementById('clienteDetallesModal');
+    const tbody = document.getElementById('detallesClienteTableBody');
+    const proyectos = globalProyectos;
+    
+    // Parsear los datos si vienen como string
+    const cliente = typeof clienteData === 'string' ? JSON.parse(clienteData) : clienteData;
+    
+    // Actualizar información del cliente
+    document.getElementById('clienteNombreCompleto').textContent = `${cliente.nombre} ${cliente.apellido}`;
+    document.getElementById('clienteTelefono').textContent = `Teléfono: ${cliente.telefono}`;
+    
+    // Limpiar tabla
+    tbody.innerHTML = '';
+    
+    // Llenar tabla con los contratos
+    cliente.contratos.forEach(contrato => {
+        const proyecto = proyectos.find(p => p.id === contrato.proyectoId)?.nombre || 'N/A';
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${proyecto}</td>
+            <td>${contrato.manzano || 'N/A'}</td>
+            <td>${contrato.lote || 'N/A'}</td>
+            <td class="text-center">
+                <button class="btn-amurallar" onclick="abrirModalPago(${contrato.id})">
+                    Amurallar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    // Mostrar modal
+    modal.style.display = 'block';
+}
+
+// Función para cerrar los modales
+function setupModal() {
+    // Modal de detalles
+    const modalDetalles = document.getElementById('clienteDetallesModal');
+    const closeBtnDetalles = modalDetalles.querySelector('.close');
+    
+    if (closeBtnDetalles) {
+        closeBtnDetalles.onclick = function() {
+            modalDetalles.style.display = 'none';
+        }
+    }
+    
+    // Modal de pago
+    const modalPago = document.getElementById('pagoMurallaModal');
+    const closeBtnPago = modalPago.querySelector('.close-pago');
+    
+    if (closeBtnPago) {
+        closeBtnPago.onclick = function() {
+            modalPago.style.display = 'none';
+        }
+    }
+    
+    // Cerrar al hacer click fuera del modal
+    window.onclick = function(event) {
+        if (event.target === modalDetalles) {
+            modalDetalles.style.display = 'none';
+        }
+        if (event.target === modalPago) {
+            modalPago.style.display = 'none';
+        }
+    }
+    
+    // Configurar submit del formulario
+    const formPago = document.getElementById('pagoMurallaForm');
+    if (formPago) {
+        formPago.addEventListener('submit', enviarDatosPagoMuralla);
+    }
+}
+
+// Inicializar modal cuando cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    setupModal();
+});
+
+// Función para amurallar (placeholder - debes implementar la lógica)
+function amurallarContrato(clienteFijoId) {
+    console.log('Amurallar contrato para cliente:', clienteFijoId);
+    // Aquí implementarás la lógica para amurallar
+    showAlert(`Funcionalidad de amurallar para contrato ${clienteFijoId}`, 'info');
+}
+
+// Inicializar modal cuando cargue la página
+document.addEventListener('DOMContentLoaded', function() {
+    setupModal();
+});
 
 function openTeamModal(teamId, equipos, usuarios) {
     const teamModal = document.getElementById('teamModal');
@@ -1878,5 +2024,114 @@ async function ejecutarDeclinacion(reservaId, tipo) {
     } catch (error) {
         console.error('Error al declinar reserva:', error);
         showAlert(error.message, 'error');
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Variable global para almacenar el contratoId seleccionado
+let contratoIdSeleccionado = null;
+
+// Función para abrir modal de pago (en lugar de amurallar directamente)
+function abrirModalPago(contratoId) {
+    contratoIdSeleccionado = contratoId;
+    
+    // Cerrar modal de detalles
+    const modalDetalles = document.getElementById('clienteDetallesModal');
+    if (modalDetalles) {
+        modalDetalles.style.display = 'none';
+    }
+    
+    // Abrir modal de pago
+    const modalPago = document.getElementById('pagoMurallaModal');
+    if (modalPago) {
+        // Limpiar formulario
+        document.getElementById('pagoMurallaForm').reset();
+        document.getElementById('contratoIdMuralla').value = contratoId;
+        modalPago.style.display = 'block';
+    }
+}
+
+// Función para cerrar modal de pago
+function cerrarModalPago() {
+    const modalPago = document.getElementById('pagoMurallaModal');
+    if (modalPago) {
+        modalPago.style.display = 'none';
+    }
+}
+
+// Función para enviar datos de pago y crear muralla
+async function enviarDatosPagoMuralla(event) {
+    event.preventDefault();
+    
+    const metodoPago = document.getElementById('metodoPagoMuralla').value;
+    const monto = document.getElementById('montoMuralla').value;
+    const contratoId = document.getElementById('contratoIdMuralla').value;
+    
+    if (!metodoPago || !monto || !contratoId) {
+        showAlert('Por favor complete todos los campos', 'error');
+        return;
+    }
+    
+    try {
+        const headers = {
+            'Content-Type': 'application/json',
+            'email': user.email,
+            'password': user.password
+        };
+
+        const response = await fetch(`${API_URL}/contratos/muralla`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ 
+                contratoId: contratoId,
+                metodoPago: metodoPago,
+                monto: monto
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Error al crear muralla');
+        }
+
+        const result = await response.json();
+        showAlert(result.message, 'success');
+        
+        // Cerrar modal de pago
+        cerrarModalPago();
+        
+        // Recargar los contratos para reflejar los cambios
+        contratosCache = []; // Limpiar cache para forzar recarga
+        loadContratos();
+        
+        // También recargar clientes fijos si es necesario
+        clientesCache = [];
+        loadClientesFijos();
+
+    } catch (error) {
+        console.error('Error al crear muralla:', error);
+        showAlert(`Error al crear muralla: ${error.message}`, 'error');
     }
 }
