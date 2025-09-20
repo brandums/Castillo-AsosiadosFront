@@ -87,9 +87,9 @@
             <div class="card">
                 <div class="card-header">
                     <h2>Mis Clientes</h2>
-                    <button class="btn btn-primary" id="addClientFBtn">
+                    <!-- <button class="btn btn-primary" id="addClientFBtn">
                         <i class="fas fa-plus"></i> Nuevo Cliente
-                    </button>
+                    </button> -->
                 </div>
                 
                 <div class="table-container">
@@ -168,72 +168,61 @@
         </div>
     </div>
 
-    <!-- Modal para nuevo cliente fijo -->
-    <div class="modal" id="clientFijoModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Registrar Nuevo Cliente Fijo</h3>
-                <button class="close-btn" id="closeClientFModalBtn">&times;</button>
-            </div>
-            <form id="clientFijoForm">
-                <div class="form-row">
-                    <div class="form-group form-group-inline">
-                        <label for="cfNombre">Nombre</label>
-                        <input type="text" id="cfNombre" class="form-control" required>
-                    </div>
-                    <div class="form-group form-group-inline">
-                        <label for="cfApellido">Apellido</label>
-                        <input type="text" id="cfApellido" class="form-control" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="cfCelular">Celular</label>
-                    <input type="tel" id="cfCelular" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="cfProyecto">Proyecto</label>
-                    <select id="cfProyecto" class="form-control" required>
-                        <option value="">Seleccionar proyecto</option>
-                    </select>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group form-group-inline">
-                        <label for="cfLote">Lote</label>
-
-                        <input 
-                            type="number" 
-                            id="cfLote" 
-                            class="form-control" 
-                            required 
-                            inputmode="numeric" 
-                            min="1" 
-                            step="1"
-                            placeholder="Ej: 12">
-                        <small class="error-text" id="terrenoError" style="color:red; display:none;">
-                            Solo se permite un número de terreno.
-                        </small>
-                    </div>
-                    <div class="form-group form-group-inline">
-                        <label for="cfManzano">Manzano</label>
-                        <input type="text" id="cfManzano" class="form-control" placeholder="Ej: 10" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="cfFechaPago">Fecha de Pago</label>
-                    <input type="date" id="cfFechaPago" class="form-control" required>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn" id="cancelClientFBtn">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </div>
-            </form>
-        </div>
+    <!-- Modal para crear contrato desde prospecto -->
+<div class="modal" id="clientFijoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Registrar como Cliente</h3>
+      <button class="close-btn" id="closeClientFModalBtn">&times;</button>
     </div>
+    <form id="clientFijoForm">
+      <div class="form-group">
+        <label for="cfProyecto">Proyecto</label>
+        <select id="cfProyecto" class="form-control" required>
+          <option value="">Seleccionar proyecto</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group form-group-inline">
+          <label for="cfLote">Lote</label>
+          <input type="number" id="cfLote" class="form-control" required min="1" step="1">
+        </div>
+        <div class="form-group form-group-inline">
+          <label for="cfManzano">Manzano</label>
+          <input type="text" id="cfManzano" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="cfFechaFirma">Fecha Firma</label>
+        <input type="date" id="cfFechaFirma" class="form-control" required>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group form-group-inline">
+          <label for="cfMetodoPago">Método de Pago</label>
+          <select id="cfMetodoPago" class="form-control" required>
+                            <option value="">Seleccionar método</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Depósito">Depósito</option>
+                        </select>
+        </div>
+        <div class="form-group form-group-inline">
+          <label for="cfMonto">Monto</label>
+          <input type="number" id="cfMonto" class="form-control" required step="0.01" placeholder="0">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" id="cancelClientFBtn">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
     <div class="modal" id="reservaModal">
         <div class="modal-content">

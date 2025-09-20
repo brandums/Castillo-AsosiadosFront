@@ -196,10 +196,9 @@ async function loadGlobalEquipos() {
     }
 }
 
-async function loadProspectos() {
+async function loadProspectos(fechaInicio = null, fechaFin = null) {
     try {
         const usuarios = globalUsuarios;
-
         const tbody = document.getElementById('prospectosTableBody');
         if (!tbody) return;
         tbody.innerHTML = '';
@@ -209,7 +208,25 @@ async function loadProspectos() {
             return;
         }
 
-        globalprospectos.forEach(prospecto => {
+        // Filtrar por fechas si están definidas
+        let prospectosFiltrados = globalprospectos;
+        if (fechaInicio || fechaFin) {
+            prospectosFiltrados = globalprospectos.filter(p => {
+                const fechaProspecto = new Date(p.fecha.split('T')[0]); // asegurar formato YYYY-MM-DD
+                const desde = fechaInicio ? new Date(fechaInicio) : null;
+                const hasta = fechaFin ? new Date(fechaFin) : null;
+
+                return (!desde || fechaProspecto >= desde) &&
+                       (!hasta || fechaProspecto <= hasta);
+            });
+        }
+
+        if (prospectosFiltrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron prospectos en este rango</td></tr>';
+            return;
+        }
+
+        prospectosFiltrados.forEach(prospecto => {
             const agente = usuarios.find(u => u.id === prospecto.agenteId);
             const nombreAgente = agente ? `${agente.nombre} ${agente.apellido}` : 'N/A';
             
@@ -227,6 +244,11 @@ async function loadProspectos() {
                         ${esReciente ? 'Reciente' : 'Antiguo'}
                     </span>
                 </td>
+                <td>
+                    <button class="btn btn-sm btn-primary" onclick="abrirModalCambiarAgente('${prospecto.id}')">
+                        Cambiar Agente
+                    </button>
+                </td>
             `;
             tbody.appendChild(row);
         });
@@ -234,13 +256,47 @@ async function loadProspectos() {
     } catch (error) {
         console.error('Error al cargar prospectos:', error);
         showAlert(`Error al cargar prospectos: ${error.message}`, 'error');
-        
-        const tbody = document.getElementById('prospectosTableBody');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
-        }
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnFiltrar = document.getElementById('btnFiltrarFechas');
+    const btnReset = document.getElementById('btnResetFechas');
+
+    if (btnFiltrar) {
+        btnFiltrar.addEventListener('click', () => {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            loadProspectos(fechaInicio, fechaFin);
+        });
+    }
+
+    if (btnReset) {
+        btnReset.addEventListener('click', () => {
+            document.getElementById('fechaInicio').value = '';
+            document.getElementById('fechaFin').value = '';
+            loadProspectos(); // mostrar todo de nuevo
+        });
+    }
+});
+// 🔽 Detectar cambios en los inputs y aplicar filtros automáticamente
+document.getElementById("fechaInicio").addEventListener("change", aplicarFiltroFechas);
+document.getElementById("fechaFin").addEventListener("change", aplicarFiltroFechas);
+
+function aplicarFiltroFechas() {
+    const fechaInicio = document.getElementById("fechaInicio").value;
+    const fechaFin = document.getElementById("fechaFin").value;
+
+    // Si no hay fechas -> mostrar todos
+    if (!fechaInicio && !fechaFin) {
+        loadProspectos();
+    } else {
+        loadProspectos(fechaInicio, fechaFin);
+    }
+}
+
+
+
 
 async function loadClientes() {
     try {
@@ -2135,3 +2191,93 @@ async function enviarDatosPagoMuralla(event) {
         showAlert(`Error al crear muralla: ${error.message}`, 'error');
     }
 }
+
+
+
+
+
+
+
+
+
+function abrirModalCambiarAgente(prospectoId) {
+    const modal = document.getElementById("modalCambiarAgente");
+    const hiddenId = document.getElementById("prospectoIdCambio");
+    const select = document.getElementById("selectNuevoAgente");
+
+    hiddenId.value = prospectoId;
+    select.innerHTML = '<option value="">-- Seleccionar agente --</option>';
+
+    globalUsuarios
+        .filter(u => u.rol === 'Agente')
+        .forEach(u => {
+            const option = document.createElement("option");
+            option.value = u.id;
+            option.textContent = `${u.nombre} ${u.apellido}`;
+            select.appendChild(option);
+        });
+
+    modal.style.display = "block"; // 👈 mostrar
+}
+
+function cerrarModalCambiar() {
+    document.getElementById("modalCambiarAgente").style.display = "none";
+}
+
+// Cerrar con la X
+document.querySelector(".close-cambiar").onclick = cerrarModalCambiar;
+
+// Cerrar clickeando fuera
+window.onclick = function(event) {
+    const modal = document.getElementById("modalCambiarAgente");
+    if (event.target === modal) {
+        cerrarModalCambiar();
+    }
+};
+
+
+
+document.getElementById('btnGuardarCambioAgente').addEventListener('click', async () => {
+    const button = document.getElementById('btnGuardarCambioAgente');
+    const prospectoId = document.getElementById('prospectoIdCambio').value;
+    const nuevoAgenteId = document.getElementById('selectNuevoAgente').value;
+
+    if (!nuevoAgenteId) {
+        showAlert('Debes seleccionar un agente', 'warning');
+        return;
+    }
+
+    try {
+        setButtonLoading(button, true, 'Guardando...');
+
+        const response = await fetch(`${API_URL}/prospectos/${prospectoId}/cambiar-agente`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'email': user.email,
+                'password': user.password
+            },
+            body: JSON.stringify({ nuevoAgenteId })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Error al cambiar agente');
+        }
+
+        showAlert('Agente reasignado exitosamente');
+        
+        await loadGlobalProspectos();
+        // Recargar prospectos en la tabla
+        await loadProspectos();
+
+        // Cerrar modal
+        cerrarModalCambiar();
+
+    } catch (error) {
+        console.error('Error al cambiar agente:', error);
+        showAlert(error.message, 'error');
+    } finally {
+        setButtonLoading(button, false);
+    }
+});

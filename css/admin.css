@@ -464,3 +464,44 @@
     max-height: 90vh;
     overflow-y: auto;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.filtros-fechas {
+    display: flex;
+    flex-wrap: wrap;       /* se ajusta en móviles */
+    gap: 15px;             /* separación entre campos */
+    align-items: flex-end; /* que los labels e inputs queden alineados al fondo */
+}
+
+.filtros-fechas .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filtros-fechas label {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.filtros-fechas input[type="date"] {
+    width: 200px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+}

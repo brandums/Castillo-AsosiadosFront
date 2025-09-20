@@ -281,6 +281,11 @@ function setupTableButtons() {
         try { btn.removeEventListener('click', handleProrrogaClick); } catch (e) { /* ignore */ }
         btn.addEventListener('click', handleProrrogaClick);
     });
+
+    qsa('.contrato-btn').forEach(btn => {
+        try { btn.removeEventListener('click', handleContratoClick); } catch (e) {}
+        btn.addEventListener('click', handleContratoClick);
+    });
 }
 
 function handleEditClick() {
@@ -289,6 +294,11 @@ function handleEditClick() {
 
 function handleProrrogaClick() {
     openProrrogaModal(this.dataset.id, this.dataset.fecha);
+}
+
+function handleContratoClick(e) {
+    const id = e.currentTarget.getAttribute('data-id');
+    openClientFijoModal(id);
 }
 
 async function loadProrrogas() {
@@ -1062,6 +1072,9 @@ function renderProspectos() {
                             <i class="fas fa-clock"></i> Prórroga
                         </button>
                     ` : ''}
+                    <button class="btn btn-sm btn-success contrato-btn" data-id="${prospecto.id}">
+                        <i class="fas fa-file-signature"></i> Registrar
+                    </button>
                 `}
             </td>
         `;
@@ -1080,94 +1093,96 @@ function renderProspectos() {
 
 
 
+let selectedProspectoId = null;
 
+// Abrir modal para un prospecto específico
+function openClientFijoModal(prospectoId) {
+  selectedProspectoId = prospectoId;
 
+  const modal = document.getElementById('clientFijoModal');
+  if (!modal) return;
+  // Llenar proyectos
+  const proyectoSelect = document.getElementById('cfProyecto');
+  proyectoSelect.innerHTML = '<option value="">Seleccionar proyecto</option>';
+  urbanizacionesCache.forEach(proyecto => {
+    const option = document.createElement('option');
+    option.value = proyecto.id;
+    option.textContent = proyecto.nombre;
+    proyectoSelect.appendChild(option);
+  });
 
+  // Fecha por defecto = hoy
+  const fechaFirmaInput = document.getElementById('cfFechaFirma');
+  fechaFirmaInput.value = new Date().toISOString().split('T')[0];
 
-
-
-
-// Función para abrir el modal de cliente fijo
-function openClientFijoModal() {
-    const modal = document.getElementById('clientFijoModal');
-    if (!modal) return;
-    
-    // Llenar el select de proyectos
-    const proyectoSelect = document.getElementById('cfProyecto');
-    if (proyectoSelect && proyectosCache.length > 0) {
-        proyectoSelect.innerHTML = '<option value="">Seleccionar proyecto</option>';
-        proyectosCache.forEach(proyecto => {
-            const option = document.createElement('option');
-            option.value = proyecto.id;
-            option.textContent = proyecto.nombre;
-            proyectoSelect.appendChild(option);
-        });
-    }
-    
-    // Establecer fecha actual como valor por defecto
-    const fechaPagoInput = document.getElementById('cfFechaPago');
-    if (fechaPagoInput) {
-        const today = new Date();
-        fechaPagoInput.value = today.toISOString().split('T')[0];
-    }
-    
-    modal.style.display = 'flex';
+  modal.style.display = 'flex';
 }
 
-// Función para cerrar el modal de cliente fijo
 function closeClientFijoModal() {
-    const modal = document.getElementById('clientFijoModal');
-    if (modal) modal.style.display = 'none';
-}
-
-// Función para enviar el formulario de cliente fijo
-async function handleClientFijoSubmit(e) {
-    e.preventDefault();
-    const submitButton = e.target.querySelector('button[type="submit"]');
+  const modal = document.getElementById('clientFijoModal');
+  if (modal) {
+    modal.style.display = 'none';
     
-    try {
-        const nombre = document.getElementById('cfNombre').value;
-        const apellido = document.getElementById('cfApellido').value;
-        const celular = document.getElementById('cfCelular').value;
-        const proyectoId = document.getElementById('cfProyecto').value;
-        const lote = document.getElementById('cfLote').value;
-        const manzano = document.getElementById('cfManzano').value;
-        const fechaPago = document.getElementById('cfFechaPago').value;
+    // resetear el formulario completo
+    const form = document.getElementById('clientFijoForm');
+    if (form) form.reset();
+  }
 
-        // Validar que todos los campos estén completos
-        if (!nombre || !apellido || !celular || !proyectoId || !lote || !manzano || !fechaPago) {
-            showAlert('Por favor complete todos los campos', 'error');
-            return;
-        }
-
-        const body = { 
-            nombre, 
-            apellido, 
-            celular, 
-            proyectoId, 
-            lote, 
-            manzano, 
-            fechaPago 
-        };
-
-        const result = await fetchJson(`${API_URL}/clientes-fijos`, {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(body)
-        }, 'Error al registrar cliente fijo', submitButton);
-
-        showAlert(result?.message || 'Cliente registrado exitosamente', 'success');
-        
-        // Cerrar modal y resetear formulario
-        closeClientFijoModal();
-        document.getElementById('clientFijoForm').reset();
-        
-        // Actualizar la tabla de clientes fijos
-        clientesCache = []; // Forzar recarga
-        await loadClientesFijos();
-        
-    } catch (error) {
-        console.error('Error al registrar cliente fijo:', error);
-        showAlert(error.message, 'error');
-    }
+  selectedProspectoId = null;
 }
+
+async function handleClientFijoSubmit(e) {
+  e.preventDefault();
+  if (!selectedProspectoId) {
+    showAlert('No se seleccionó un prospecto válido', 'error');
+    return;
+  }
+
+  const proyecto = document.getElementById('cfProyecto').value;
+  const lote = document.getElementById('cfLote').value;
+  const manzano = document.getElementById('cfManzano').value;
+  const fechaFirma = document.getElementById('cfFechaFirma').value;
+  const metodoPago = document.getElementById('cfMetodoPago').value;
+  const monto = document.getElementById('cfMonto').value;
+
+  if (!proyecto || !lote || !manzano || !fechaFirma || !metodoPago || !monto) {
+    showAlert('Por favor complete todos los campos', 'error');
+    return;
+  }
+
+  const submitButton = e.target.querySelector('button[type="submit"]');
+  setButtonLoading(submitButton, true, 'Cargando...');
+
+  try {
+    const result = await fetchJson(
+      `${API_URL}/prospectos/${selectedProspectoId}/crear-contrato`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ proyecto, lote, manzano, fechaFirma, metodoPago, monto })
+      },
+      'Error al crear contrato y cliente fijo'
+    );
+
+    showAlert(result?.message || 'Contrato y cliente fijo creados exitosamente', 'success');
+
+    closeClientFijoModal();
+    document.getElementById('clientFijoForm').reset();
+
+    // Refrescar clientes fijos
+    clientesCache = [];
+    await loadClientesFijos();
+
+  } catch (error) {
+    console.error('Error al crear contrato desde prospecto:', error);
+    showAlert(error.message, 'error');
+  } finally {
+    setButtonLoading(submitButton, false);
+  }
+}
+
+
+// Eventos
+document.getElementById('clientFijoForm').addEventListener('submit', handleClientFijoSubmit);
+document.getElementById('closeClientFModalBtn').addEventListener('click', closeClientFijoModal);
+document.getElementById('cancelClientFBtn').addEventListener('click', closeClientFijoModal);
