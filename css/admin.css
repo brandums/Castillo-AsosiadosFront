@@ -505,3 +505,86 @@
     border-radius: 4px;
     border: 1px solid #ced4da;
 }
+
+
+/* --- Desktop: título y filtros en fila --- */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* --- Móvil (<768px): título arriba, filtros debajo --- */
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;   /* hijos en columna */
+        align-items: flex-start;
+    }
+
+    .card-header h2 {
+        margin-bottom: 10px;      /* espacio debajo del título */
+    }
+
+    .filtros-fechas {
+        display: flex;            /* fila */
+        flex-direction: row;      
+        justify-content: flex-start;
+        gap: 15px;
+        width: 100%;
+        flex-wrap: nowrap;        /* evita que se apilen */
+    }
+
+    .filtros-fechas .form-group {
+        flex: 1;                  /* que las dos fechas ocupen el mismo espacio */
+        min-width: 0;
+    }
+
+    .filtros-fechas input[type="date"] {
+        width: 100%;              /* ocupar todo el ancho disponible */
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+.filtros-clientesF {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.filtros-clientesF .form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 250px;
+}
+
+.filtros-clientesF label {
+    font-weight: 500;
+}
+
+.filtros-clientesF input,
+.filtros-clientesF select {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    width: 100%;
+}
+
+/* --- Móvil: filtros en columna --- */
+@media (max-width: 768px) {
+    .filtros-clientesF {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

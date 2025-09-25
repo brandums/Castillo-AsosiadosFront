@@ -196,104 +196,104 @@ async function loadGlobalEquipos() {
     }
 }
 
-async function loadProspectos(fechaInicio = null, fechaFin = null) {
-    try {
-        const usuarios = globalUsuarios;
-        const tbody = document.getElementById('prospectosTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        if (!globalprospectos || globalprospectos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay prospectos registrados</td></tr>';
-            return;
+let prospectosSearchQuery = ""; // búsqueda actual
+
+    async function loadProspectos(fechaInicio = null, fechaFin = null) {
+        try {
+            const usuarios = globalUsuarios;
+            const tbody = document.getElementById('prospectosTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            
+            if (!globalprospectos || globalprospectos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay prospectos registrados</td></tr>';
+                return;
+            }
+
+            // Filtrar por fechas si están definidas
+            let prospectosFiltrados = globalprospectos;
+            if (fechaInicio || fechaFin) {
+                prospectosFiltrados = globalprospectos.filter(p => {
+                    const fechaProspecto = new Date(p.fecha.split('T')[0]); // asegurar formato YYYY-MM-DD
+                    const desde = fechaInicio ? new Date(fechaInicio) : null;
+                    const hasta = fechaFin ? new Date(fechaFin) : null;
+
+                    return (!desde || fechaProspecto >= desde) &&
+                           (!hasta || fechaProspecto <= hasta);
+                });
+            }
+
+            // Filtrar por búsqueda (nombre, apellido, celular)
+            prospectosFiltrados = prospectosFiltrados.filter(p => {
+                const texto = `${p.nombre || ''} ${p.apellido || ''} ${p.celular || ''}`.toLowerCase();
+                return texto.includes(prospectosSearchQuery.toLowerCase());
+            });
+
+            if (prospectosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron prospectos</td></tr>';
+                return;
+            }
+
+            prospectosFiltrados.forEach(prospecto => {
+                const agente = usuarios.find(u => u.id === prospecto.agenteId);
+                const nombreAgente = agente ? `${agente.nombre} ${agente.apellido}` : 'N/A';
+                
+                const diasRestantes = calcularDiasRestantes(prospecto.fecha);
+                const esReciente = diasRestantes >= 7;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${prospecto.nombre} ${prospecto.apellido}</td>
+                    <td>${prospecto.celular}</td>
+                    <td>${nombreAgente}</td>
+                    <td>${formatDate(prospecto.fecha)}</td>
+                    <td>
+                        <span class="badge ${esReciente ? 'badge-success' : 'badge-warning'}">
+                            ${esReciente ? 'Reciente' : 'Antiguo'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="abrirModalCambiarAgente('${prospecto.id}')">
+                            Cambiar Agente
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error al cargar prospectos:', error);
+            showAlert(`Error al cargar prospectos: ${error.message}`, 'error');
         }
+    }
 
-        // Filtrar por fechas si están definidas
-        let prospectosFiltrados = globalprospectos;
-        if (fechaInicio || fechaFin) {
-            prospectosFiltrados = globalprospectos.filter(p => {
-                const fechaProspecto = new Date(p.fecha.split('T')[0]); // asegurar formato YYYY-MM-DD
-                const desde = fechaInicio ? new Date(fechaInicio) : null;
-                const hasta = fechaFin ? new Date(fechaFin) : null;
+    // 🔽 Detectar cambios en los filtros
+    document.addEventListener('DOMContentLoaded', () => {
+        // Filtros de fecha
+        document.getElementById("fechaInicio").addEventListener("change", aplicarFiltroFechas);
+        document.getElementById("fechaFin").addEventListener("change", aplicarFiltroFechas);
 
-                return (!desde || fechaProspecto >= desde) &&
-                       (!hasta || fechaProspecto <= hasta);
+        // Buscador
+        const searchInput = document.getElementById('prospectosSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                prospectosSearchQuery = e.target.value;
+                aplicarFiltroFechas(); // aplicar búsqueda + fechas
             });
         }
+    });
 
-        if (prospectosFiltrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron prospectos en este rango</td></tr>';
-            return;
-        }
+    function aplicarFiltroFechas() {
+        const fechaInicio = document.getElementById("fechaInicio").value;
+        const fechaFin = document.getElementById("fechaFin").value;
 
-        prospectosFiltrados.forEach(prospecto => {
-            const agente = usuarios.find(u => u.id === prospecto.agenteId);
-            const nombreAgente = agente ? `${agente.nombre} ${agente.apellido}` : 'N/A';
-            
-            const diasRestantes = calcularDiasRestantes(prospecto.fecha);
-            const esReciente = diasRestantes >= 7;
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${prospecto.nombre} ${prospecto.apellido}</td>
-                <td>${prospecto.celular}</td>
-                <td>${nombreAgente}</td>
-                <td>${formatDate(prospecto.fecha)}</td>
-                <td>
-                    <span class="badge ${esReciente ? 'badge-success' : 'badge-warning'}">
-                        ${esReciente ? 'Reciente' : 'Antiguo'}
-                    </span>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="abrirModalCambiarAgente('${prospecto.id}')">
-                        Cambiar Agente
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-
-    } catch (error) {
-        console.error('Error al cargar prospectos:', error);
-        showAlert(`Error al cargar prospectos: ${error.message}`, 'error');
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const btnFiltrar = document.getElementById('btnFiltrarFechas');
-    const btnReset = document.getElementById('btnResetFechas');
-
-    if (btnFiltrar) {
-        btnFiltrar.addEventListener('click', () => {
-            const fechaInicio = document.getElementById('fechaInicio').value;
-            const fechaFin = document.getElementById('fechaFin').value;
+        // Si no hay fechas -> mostrar todos (pero respetando búsqueda)
+        if (!fechaInicio && !fechaFin) {
+            loadProspectos();
+        } else {
             loadProspectos(fechaInicio, fechaFin);
-        });
+        }
     }
-
-    if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            document.getElementById('fechaInicio').value = '';
-            document.getElementById('fechaFin').value = '';
-            loadProspectos(); // mostrar todo de nuevo
-        });
-    }
-});
-// 🔽 Detectar cambios en los inputs y aplicar filtros automáticamente
-document.getElementById("fechaInicio").addEventListener("change", aplicarFiltroFechas);
-document.getElementById("fechaFin").addEventListener("change", aplicarFiltroFechas);
-
-function aplicarFiltroFechas() {
-    const fechaInicio = document.getElementById("fechaInicio").value;
-    const fechaFin = document.getElementById("fechaFin").value;
-
-    // Si no hay fechas -> mostrar todos
-    if (!fechaInicio && !fechaFin) {
-        loadProspectos();
-    } else {
-        loadProspectos(fechaInicio, fechaFin);
-    }
-}
 
 
 
@@ -1321,7 +1321,6 @@ async function loadClientesFijos() {
 
         // Agrupar clientes por nombre, apellido y teléfono
         const clientesAgrupados = {};
-        
         clientesF.forEach(cliente => {
             const clave = `${cliente.nombre}-${cliente.apellido}-${cliente.telefono}`;
             
@@ -1333,12 +1332,24 @@ async function loadClientesFijos() {
                     contratos: []
                 };
             }
-            
             clientesAgrupados[clave].contratos.push(cliente);
         });
 
-        // Convertir el objeto a array
-        const clientesUnicos = Object.values(clientesAgrupados);
+        let clientesUnicos = Object.values(clientesAgrupados);
+
+        // 🔎 Filtro de búsqueda
+        const busqueda = document.getElementById("buscarClientesF")?.value.trim().toLowerCase() || "";
+        if (busqueda) {
+            clientesUnicos = clientesUnicos.filter(cliente => {
+                const coincideNombre = cliente.nombre.toLowerCase().includes(busqueda);
+                const coincideApellido = cliente.apellido.toLowerCase().includes(busqueda);
+                // const coincideTelefono = cliente.telefono.toLowerCase().includes(busqueda);
+                const coincideLote = cliente.contratos.some(c => 
+                    (c.lote && c.lote.toString().toLowerCase().includes(busqueda))
+                );
+                return coincideNombre || coincideApellido || coincideLote;
+            });
+        }
 
         if (clientesUnicos.length === 0) {
             if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay clientes que coincidan con los filtros</td></tr>';
@@ -1367,6 +1378,19 @@ async function loadClientesFijos() {
         showAlert(`Error al cargar clientes: ${error.message}`, 'error');
     }
 }
+
+// 🔎 Escuchar búsqueda en tiempo real
+document.addEventListener("DOMContentLoaded", () => {
+    const inputBusqueda = document.getElementById("buscarClientesF");
+    if (inputBusqueda) {
+        inputBusqueda.addEventListener("input", () => loadClientesFijos());
+    }
+    const filtroProyecto = document.getElementById("filtroClientesF");
+    if (filtroProyecto) {
+        filtroProyecto.addEventListener("change", () => loadClientesFijos());
+    }
+});
+
 
 // Función para mostrar detalles del cliente
 function mostrarDetallesCliente(clienteData) {
