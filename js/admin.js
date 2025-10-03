@@ -1013,7 +1013,7 @@ async function loadEquipos() {
 
 async function loadReservas() {
     const tbody = document.getElementById('reservasTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando reservas...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">Cargando reservas...</td></tr>';
     
     try {
         const headers = {
@@ -1029,7 +1029,7 @@ async function loadReservas() {
             
             if (!reservasResponse.ok) {
                 if (reservasResponse.status === 404) {
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay reservas registradas</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay reservas registradas</td></tr>';
                     return;
                 }
                 
@@ -1047,7 +1047,7 @@ async function loadReservas() {
         if (tbody) tbody.innerHTML = '';
         
         if (!reservas || reservas.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay reservas registradas</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay reservas registradas</td></tr>';
             return;
         }
 
@@ -1062,7 +1062,7 @@ async function loadReservas() {
         }
 
         if (reservas.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay reservas para este proyecto</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay reservas para este proyecto</td></tr>';
             return;
         }
 
@@ -1073,11 +1073,38 @@ async function loadReservas() {
             const asesor = usuarios.find(u => u.id === reserva.asesorId);
             const nombreAsesor = asesor ? `${asesor.nombre} ${asesor.apellido}` : 'N/A';
             
-            const fechaReserva = new Date(reserva.fechaReserva);
-            const fechaVencimiento = new Date(fechaReserva);
-            fechaVencimiento.setDate(fechaReserva.getDate() + parseInt(reserva.tiempoEspera));
-            const hoy = new Date();
-            const diasRestantes = Math.ceil((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+            // 🔹 CALCULAR EXPIRACIÓN EXACTA CON FECHA + HORA
+            const fechaHoraReserva = new Date(`${reserva.fechaReserva}T${reserva.horaReserva || '23:59'}`);
+            const fechaVencimiento = new Date(fechaHoraReserva);
+            fechaVencimiento.setDate(fechaHoraReserva.getDate() + parseInt(reserva.tiempoEspera));
+            
+            const ahora = new Date();
+            const milisegundosRestantes = fechaVencimiento - ahora;
+            const diasRestantes = Math.ceil(milisegundosRestantes / (1000 * 60 * 60 * 24));
+            const horasRestantes = Math.ceil((milisegundosRestantes % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            // 🔹 DETERMINAR CLASE Y TEXTO SEGÚN TIEMPO RESTANTE
+            let badgeClass = 'badge-success';
+            let textoRestante = '';
+            
+            if (milisegundosRestantes <= 0) {
+                badgeClass = 'badge-danger';
+                textoRestante = 'Vencido';
+            } else if (diasRestantes === 0) {
+                badgeClass = 'badge-warning';
+                textoRestante = `${horasRestantes} horas`;
+            } else if (diasRestantes <= 3) {
+                badgeClass = 'badge-warning';
+                textoRestante = `${diasRestantes} días`;
+            } else {
+                textoRestante = `${diasRestantes} días`;
+            }
+            
+            // 🔹 VERIFICAR SI LA RESERVA ESTÁ ACTIVA (para mostrar botones)
+            const estaActiva = reserva.firmado != "TRUE" && 
+                              reserva.estado !== 'Declinado sin Devolución' && 
+                              reserva.estado !== 'Declinado con Devolución' &&
+                              milisegundosRestantes > 0;
             
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -1086,10 +1113,13 @@ async function loadReservas() {
                 <td>${reserva.nroTerreno}</td>
                 <td>${nombreCliente}</td>
                 <td>${reserva.montoReserva} Bs</td>
-                <td>${formatDate(reserva.fechaReserva)}</td>
                 <td>
-                    <span class="badge ${diasRestantes > 3 ? 'badge-success' : 'badge-warning'}">
-                        ${diasRestantes > 0 ? diasRestantes + " días" : 'Vencido'}
+                    <div>${formatDate(reserva.fechaReserva)}</div>
+                    <small class="text-muted">${reserva.horaReserva || '23:59'}</small>
+                </td>
+                <td>
+                    <span class="badge ${badgeClass}">
+                        ${textoRestante}
                     </span>
                 </td>
                 <td>
@@ -1099,10 +1129,7 @@ async function loadReservas() {
                 </td>
                 <td class="action-buttons">
                     <div class="btn-container">
-                        ${reserva.firmado != "TRUE" && 
-                         reserva.estado !== 'Declinado sin Devolución' && 
-                         reserva.estado !== 'Declinado con Devolución' &&
-                         diasRestantes > 0 ? `
+                        ${estaActiva ? `
                             <button class="btn btn-sm btn-primary ampliar-btn" data-id="${reserva.id}" data-dias="7">
                                 +7
                             </button>
@@ -1143,7 +1170,7 @@ async function loadReservas() {
         
     } catch (error) {
         console.error('Error al cargar reservas:', error);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center error">${error.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar reservas: ${error.message}`, 'error');
     }
 }
@@ -2304,4 +2331,189 @@ document.getElementById('btnGuardarCambioAgente').addEventListener('click', asyn
     } finally {
         setButtonLoading(button, false);
     }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const reporteBtn = document.getElementById("reporteBtn");
+    const reporteModal = document.getElementById("reporteModal");
+    const closeReporteModalBtn = document.getElementById("closeReporteModalBtn");
+    const cancelReporteBtn = document.getElementById("cancelReporteBtn");
+    const generarReporteBtn = document.getElementById("generarReporteBtn");
+    const asesorSelect = document.getElementById("filtroAsesor");
+    const proyectoSelect = document.getElementById("filtroProyectoReporte");
+
+    // 🔹 Función para cargar asesores y proyectos en los selects
+    function cargarSelectores() {
+        // Limpiar selects antes de recargar
+        asesorSelect.innerHTML = '<option value="todos">Todos</option>';
+        proyectoSelect.innerHTML = '<option value="todos">Todos</option>';
+
+        // Cargar asesores
+        globalUsuarios.forEach(u => {
+            const opt = document.createElement("option");
+            opt.value = u.id;
+            opt.textContent = `${u.nombre} ${u.apellido}`;
+            asesorSelect.appendChild(opt);
+        });
+
+        // Cargar proyectos
+        globalProyectos.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p.id;
+            opt.textContent = p.nombre;
+            proyectoSelect.appendChild(opt);
+        });
+    }
+
+    // 🔹 Abrir modal y cargar selects
+    reporteBtn.addEventListener("click", () => {
+        cargarSelectores();
+        reporteModal.style.display = "block";
+    });
+
+    // 🔹 Cerrar modal
+    closeReporteModalBtn.addEventListener("click", () => {
+        reporteModal.style.display = "none";
+    });
+    cancelReporteBtn.addEventListener("click", () => {
+        reporteModal.style.display = "none";
+    });
+
+
+    // 🔹 Generar reporte PDF
+    generarReporteBtn.addEventListener("click", async () => {
+        const fechaInicio = document.getElementById("fechaInicioReporte").value;
+        const fechaFin = document.getElementById("fechaFinReporte").value;
+        const filtroAsesor = asesorSelect.value;
+        const filtroProyecto = proyectoSelect.value;
+
+        if (!fechaInicio || !fechaFin) {
+            showAlert("Debe seleccionar un rango de fechas.", "error");
+            return;
+        }
+
+        // ✅ Mostrar loading en el botón
+        setButtonLoading(generarReporteBtn, true, "Generando reporte...");
+
+        try {
+            const headers = {
+                "Content-Type": "application/json",
+                "email": user.email,
+                "password": user.password
+            };
+
+            const response = await fetch(`${API_URL}/reservas-completas`, {
+                method: "GET",
+                headers: headers
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Error al obtener reservas");
+            }
+
+            let reservasFiltradas = await response.json();
+
+            // 🔹 Filtrar por fecha
+            reservasFiltradas = reservasFiltradas.filter(r => {
+                const fechaR = new Date(r.fechaReserva);
+                return fechaR >= new Date(fechaInicio) && fechaR <= new Date(fechaFin);
+            });
+
+            // 🔹 Filtrar por asesor
+            if (filtroAsesor !== "todos") {
+                reservasFiltradas = reservasFiltradas.filter(r => String(r.asesorId) === filtroAsesor);
+            }
+
+            // 🔹 Filtrar por proyecto
+            if (filtroProyecto !== "todos") {
+                reservasFiltradas = reservasFiltradas.filter(r => String(r.proyectoId) === filtroProyecto);
+            }
+
+            if (reservasFiltradas.length === 0) {
+                showAlert("No se encontraron reservas con los filtros seleccionados.", "info");
+                return;
+            }
+
+            // ✅ Generar PDF con jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF("landscape");
+
+            doc.setFontSize(16);
+            doc.text("Reporte de Reservas", 14, 20);
+            doc.setFontSize(10);
+            doc.text(`Desde: ${fechaInicio}  Hasta: ${fechaFin}`, 14, 28);
+
+            const clientes = globalprospectos;
+            const proyectos = globalProyectos;
+            const usuarios = globalUsuarios;
+
+            const data = reservasFiltradas.map(r => {
+                const cliente = clientes.find(c => c.id === r.clienteId);
+                const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : "N/A";
+
+                const asesor = usuarios.find(u => u.id === r.asesorId);
+                const nombreAsesor = asesor ? `${asesor.nombre} ${asesor.apellido}` : "N/A";
+
+                const proyecto = proyectos.find(p => p.id === r.proyectoId)?.nombre || "N/A";
+
+                // 🔹 Calcular estado con Expirado (con fecha en Bolivia)
+                let estado = r.estado;
+                if (r.fechaReserva && r.tiempoEspera) {
+                    const partes = r.fechaReserva.split("-");
+                    const fechaReserva = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+                    const fechaLimite = new Date(fechaReserva);
+                    fechaLimite.setDate(fechaLimite.getDate() + parseInt(r.tiempoEspera));
+                    const ahoraBolivia = new Date();
+
+                    if (ahoraBolivia > fechaLimite) {
+                        estado = "Expirado";
+                    }
+                }
+
+                return [
+                    proyecto,
+                    r.manzano,
+                    r.nroTerreno,
+                    nombreCliente,
+                    `${r.montoReserva} Bs`,
+                    formatDate(r.fechaReserva),
+                    nombreAsesor,
+                    estado
+                ];
+            });
+
+            doc.autoTable({
+                head: [["Proyecto", "Manzano", "Terreno", "Cliente", "Monto", "Fecha Reserva", "Asesor", "Estado"]],
+                body: data,
+                startY: 35,
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`reporte_reservas_${fechaInicio}_${fechaFin}.pdf`);
+            reporteModal.style.display = "none";
+
+        } catch (error) {
+            console.error("Error al generar reporte:", error);
+            showAlert(`Error al generar reporte: ${error.message}`, "error");
+        } finally {
+            // ✅ Quitar loading siempre, éxito o error
+            setButtonLoading(generarReporteBtn, false);
+        }
+    });
 });

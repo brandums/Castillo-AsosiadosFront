@@ -186,7 +186,7 @@ async function loadProyectos() {
 
 async function loadReservas() {
     const tbody = document.getElementById('reservasTableBody');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">Cargando reservas...</td></tr>';
+    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">Cargando reservas...</td></tr>';
     
     try {
         let reservas = [];
@@ -201,7 +201,7 @@ async function loadReservas() {
             
             if (!reservasResponse.ok) {
                 if (reservasResponse.status === 404) {
-                    if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay reservas registradas</td></tr>';
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay reservas registradas</td></tr>';
                     return;
                 }
                 
@@ -211,6 +211,8 @@ async function loadReservas() {
             
             reservas = await reservasResponse.json();
             reservasCache = reservas;
+
+            console.log("Reservas: ", reservas);
         } else {
             reservas = reservasCache;
         }
@@ -218,7 +220,7 @@ async function loadReservas() {
         if (tbody) tbody.innerHTML = '';
         
         if (!reservas || reservas.length === 0) {
-            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center">No hay reservas registradas</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center">No hay reservas registradas</td></tr>';
             return;
         }
         
@@ -236,11 +238,32 @@ async function loadReservas() {
             const cliente = clientes.find(c => c.id === reserva.clienteId);
             const nombreCliente = cliente ? `${cliente.nombre} ${cliente.apellido}` : 'N/A';
             
-            const fechaReserva = new Date(reserva.fechaReserva);
-            const fechaVencimiento = new Date(fechaReserva);
-            fechaVencimiento.setDate(fechaReserva.getDate() + parseInt(reserva.tiempoEspera));
-            const hoy = new Date();
-            const diasRestantes = Math.ceil((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+            // Calcular expiración exacta con hora
+            const fechaHoraReserva = new Date(`${reserva.fechaReserva}T${reserva.horaReserva || '00:00'}`);
+            const fechaVencimiento = new Date(fechaHoraReserva);
+            fechaVencimiento.setDate(fechaHoraReserva.getDate() + parseInt(reserva.tiempoEspera));
+            
+            const ahora = new Date();
+            const milisegundosRestantes = fechaVencimiento - ahora;
+            const diasRestantes = Math.ceil(milisegundosRestantes / (1000 * 60 * 60 * 24));
+            const horasRestantes = Math.ceil((milisegundosRestantes % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            
+            // Determinar clase del badge según tiempo restante
+            let badgeClass = 'badge-success';
+            let textoRestante = '';
+            
+            if (milisegundosRestantes <= 0) {
+                badgeClass = 'badge-danger';
+                textoRestante = 'Vencido';
+            } else if (diasRestantes === 0) {
+                badgeClass = 'badge-warning';
+                textoRestante = `${horasRestantes} horas`;
+            } else if (diasRestantes <= 3) {
+                badgeClass = 'badge-warning';
+                textoRestante = `${diasRestantes} días`;
+            } else {
+                textoRestante = `${diasRestantes} días`;
+            }
             
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -249,10 +272,13 @@ async function loadReservas() {
                 <td>${reserva.nroTerreno}</td>
                 <td>${nombreCliente}</td>
                 <td>${reserva.montoReserva} Bs</td>
-                <td>${formatDate(reserva.fechaReserva)}</td>
                 <td>
-                    <span class="badge ${diasRestantes > 3 ? 'badge-success' : 'badge-warning'}">
-                        ${diasRestantes > 0 ? diasRestantes + " días" : 'Vencido'}
+                    <div>${formatDate(reserva.fechaReserva)}</div>
+                    <small class="text-muted">${reserva.horaReserva || '00:00'}</small>
+                </td>
+                <td>
+                    <span class="badge ${badgeClass}">
+                        ${textoRestante}
                     </span>
                 </td>
                 <td>
@@ -277,7 +303,7 @@ async function loadReservas() {
 
     } catch (error) {
         console.error('Error al cargar reservas:', error);
-        if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="text-center error">${error.message}</td></tr>`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar reservas: ${error.message}`, 'error');
     }
 }

@@ -229,6 +229,9 @@
                     <!-- <button class="btn btn-primary" id="addReservaBtn">
                         <i class="fas fa-plus"></i> Nueva Reserva
                     </button> -->
+                    <button class="btn btn-primary" id="reporteBtn">
+                        <i class="fas fa-file-pdf"></i> Reporte
+                    </button>
                 </div>
                 <div class="filtro-proyectos" style="margin-bottom: 15px;">
                         <label for="filtroProyecto"><strong>Filtrar por Proyecto:</strong></label>
@@ -253,6 +256,37 @@
                         </thead>
                         <tbody id="reservasTableBody"></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Reporte -->
+        <div class="modal" id="reporteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Generar Reporte de Reservas</h3>
+                    <button class="close-btn" id="closeReporteModalBtn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <label><strong>Fecha Inicio:</strong></label>
+                    <input type="date" id="fechaInicioReporte" class="form-control mb-2">
+
+                    <label><strong>Fecha Fin:</strong></label>
+                    <input type="date" id="fechaFinReporte" class="form-control mb-2">
+
+                    <label><strong>Asesor:</strong></label>
+                    <select id="filtroAsesor" class="form-control mb-2">
+                        <option value="todos">Todos</option>
+                    </select>
+
+                    <label><strong>Proyecto:</strong></label>
+                    <select id="filtroProyectoReporte" class="form-control mb-2">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" id="cancelReporteBtn">Cancelar</button>
+                    <button class="btn btn-primary" id="generarReporteBtn">Generar PDF</button>
                 </div>
             </div>
         </div>
@@ -777,6 +811,8 @@
         </div>
     </footer>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
     <script src="js/common.js"></script>
     <script src="js/admin.js"></script>
 </body>

@@ -1067,3 +1067,18 @@ tr:hover {
     border-color: #007bff;
     outline: none;
 }
+
+
+
+
+
+
+
+
+
+
+td small.text-muted {
+    font-size: 0.75rem;
+    display: block;
+    margin-top: 2px;
+}
