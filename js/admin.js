@@ -2,7 +2,6 @@ const user = JSON.parse(sessionStorage.getItem('user'));
 
 let globalUsuarios = [];
 let globalProyectos = [];
-let globalClientes = [];
 let globalEquipos = [];
 let globalprospectos = [];
 let reservasCache = [];
@@ -23,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         await Promise.all([
             loadGlobalUsuarios(),
             loadGlobalProyectos(),
-            loadGlobalClientes(),
             loadGlobalEquipos(),
             loadGlobalProspectos(),
             loadProspectosPorUsuario()
@@ -35,7 +33,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         initFiltroRanking();
         await loadUsuarios();
         await loadProspectos();
-        await loadClientes();
         await loadProrrogas();
         await loadEquipos();
         await loadReservas();
@@ -117,19 +114,6 @@ async function loadGlobalProspectos() {
     if (!response.ok) throw new Error('Error al cargar prospectos globales');
     
     globalprospectos = await response.json();
-}
-
-async function loadGlobalClientes() {
-    const headers = {
-        'Content-Type': 'application/json',
-        'email': user.email,
-        'password': user.password
-    };
-
-    const response = await fetch(`${API_URL}/clientes`, { headers });
-    if (!response.ok) throw new Error('Error al cargar clientes globales');
-    
-    globalClientes = await response.json();
 }
 
 
@@ -297,57 +281,6 @@ let prospectosSearchQuery = ""; // búsqueda actual
 
 
 
-
-async function loadClientes() {
-    try {
-        const urbanizaciones = globalProyectos;
-        const usuarios = globalUsuarios;
-
-        const tbody = document.getElementById('clientsTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        
-        if (!globalClientes || globalClientes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No hay clientes registrados</td></tr>';
-            return;
-        }
-
-        globalClientes.forEach(cliente => {
-            const urbanizacion = urbanizaciones.find(u => u.id === cliente.proyectoId)?.nombre || 'N/A';
-            const agente = usuarios.find(u => u.id === cliente.agenteId);
-            const nombreAgente = agente ? `${agente.nombre} ${agente.apellido}` : 'N/A';
-            
-            const diasRestantes = calcularDiasRestantes(cliente.fecha);
-            const esReciente = diasRestantes >= 7;
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${cliente.nombre} ${cliente.apellido}</td>
-                <td>${cliente.celular}</td>
-                <td>${urbanizacion}</td>
-                <td>${cliente.lote}</td>
-                <td>${cliente.manzano}</td>
-                <td>${nombreAgente}</td>
-                <td>${formatDate(cliente.fecha)}</td>
-                <td>
-                    <span class="badge ${esReciente ? 'badge-success' : 'badge-warning'}">
-                        ${esReciente ? 'Reciente' : 'Antiguo'}
-                    </span>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-
-    } catch (error) {
-        console.error('Error al cargar clientes:', error);
-        showAlert(`Error al cargar clientes: ${error.message}`, 'error');
-        
-        const tbody = document.getElementById('clientsTableBody');
-        if (tbody) {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-center error">${error.message}</td></tr>`;
-        }
-    }
-}
 
 async function loadProrrogas() {
     const tbody = document.getElementById('prorrogasTableBody');

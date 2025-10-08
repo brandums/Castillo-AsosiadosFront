@@ -211,8 +211,6 @@ async function loadReservas() {
             
             reservas = await reservasResponse.json();
             reservasCache = reservas;
-
-            console.log("Reservas: ", reservas);
         } else {
             reservas = reservasCache;
         }
