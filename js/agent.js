@@ -263,6 +263,9 @@ async function loadReservas() {
                 textoRestante = `${diasRestantes} días`;
             }
             
+            // 🔹 CORRECCIÓN: Usar el campo 'estado' en lugar de solo 'firmado'
+            const estado = reserva.estado || (reserva.firmado == "TRUE" ? 'Firmado' : 'Activa');
+            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${proyecto}</td>
@@ -280,8 +283,8 @@ async function loadReservas() {
                     </span>
                 </td>
                 <td>
-                    <span class="badge ${reserva.firmado == "TRUE" ? 'badge-success' : 'badge-info'}">
-                        ${reserva.firmado == "TRUE" ? 'Firmado' : 'Pendiente'}
+                    <span class="badge ${getBadgeClassAgente(estado)}">
+                        ${estado}
                     </span>
                 </td>
                 <td>
@@ -303,6 +306,22 @@ async function loadReservas() {
         console.error('Error al cargar reservas:', error);
         if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center error">${error.message}</td></tr>`;
         showAlert(`Error al cargar reservas: ${error.message}`, 'error');
+    }
+}
+
+function getBadgeClassAgente(estado) {
+    switch (estado) {
+        case 'Firmado':
+            return 'badge-success';
+        case 'Activa':
+        case 'Pendiente':
+            return 'badge-info';
+        case 'En espera':
+        case 'Declinado sin Devolución':
+        case 'Declinado con Devolución':
+            return 'badge-danger';
+        default:
+            return 'badge-warning';
     }
 }
 
