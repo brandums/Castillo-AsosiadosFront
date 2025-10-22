@@ -164,11 +164,20 @@ async function loadUrbanizaciones() {
 }
 
 async function loadGlobalProspectos() { 
-    const headers = { 'Content-Type': 'application/json', 'email': "acastilla466@gmail.com", 'password': "Vilu101110" }; 
-    const response = await fetch(`${API_URL}/prospectos`, { headers }); 
-    
-    if (!response.ok) throw new Error('Error al cargar clientes globales'); 
-    globalProspectos = await response.json(); 
+    try {
+        globalProspectos = await fetchJson(
+            `${API_URL}/todoProspectos`, 
+            { headers: getAuthHeaders() }, 
+            'Error al cargar clientes globales'
+        );
+        
+        if (!Array.isArray(globalProspectos)) {
+            globalProspectos = [];
+        }
+    } catch (error) {
+        globalProspectos = [];
+        throw new Error('Error al cargar clientes globales: ' + error.message);
+    }
 }
 
 async function loadProyectos() {
